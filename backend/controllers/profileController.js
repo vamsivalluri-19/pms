@@ -226,3 +226,28 @@ export const verifyDocument = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Failed to verify document' });
   }
 };
+
+// @desc    Upload student profile photo
+// @route   POST /api/students/photo
+// @access  Private (Student)
+export const uploadPhoto = async (req, res) => {
+  try {
+    const student = await Student.findOne({ user: req.user._id });
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please select a photo file to upload' });
+    }
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+    student.photo = fileUrl;
+    await student.save();
+
+    return res.json({ success: true, message: 'Profile photo uploaded successfully', photo: fileUrl, student });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Profile photo upload failed' });
+  }
+};

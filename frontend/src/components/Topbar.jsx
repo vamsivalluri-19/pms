@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { NotificationContext } from '../context/NotificationContext.jsx';
-import { Bell, Menu, User, Check, Trash2, Calendar, Award, Sun, Moon } from 'lucide-react';
+import { Bell, Menu, User, Check, Trash2, Calendar, Award, Sun, Moon, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Topbar = ({ toggleSidebar }) => {

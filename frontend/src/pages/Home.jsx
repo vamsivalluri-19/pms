@@ -351,18 +351,40 @@ const Home = () => {
       </section>
 
       {/* Footer Section */}
-      <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-primary-600 text-white">
-              <GraduationCap size={16} />
+      <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800 text-xs">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 items-start text-left">
+          {/* Logo Column */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-white">
+              <div className="p-1.5 rounded-lg bg-primary-600">
+                <GraduationCap size={16} />
+              </div>
+              <span className="font-bold font-display text-sm">PlaceTrack</span>
             </div>
-            <span className="font-bold text-white font-display text-sm">PlaceTrack</span>
+            <p className="text-slate-500 text-[11px] leading-relaxed max-w-xs">
+              A comprehensive campus placement management platform built to orchestrate, simplify, and track student recruitment drives.
+            </p>
           </div>
-          <p className="text-xs text-slate-500">© 2026 PlaceTrack. All rights reserved. Managed by University Corporate Relations.</p>
-          <div className="flex gap-4 text-xs font-semibold">
-            <span className="hover:text-white cursor-pointer">Privacy Policy</span>
-            <span className="hover:text-white cursor-pointer">Terms & Conditions</span>
+
+          {/* Contact Details Column */}
+          <div className="flex flex-col gap-2.5">
+            <span className="text-white font-bold font-display text-xs uppercase tracking-wider">Contact & Support</span>
+            <p className="text-slate-300"><strong>Coordinator:</strong> Vamsi Valluri</p>
+            <p className="text-slate-300"><strong>Phone:</strong> +91 6301231575</p>
+            <p className="text-slate-300"><strong>Email:</strong> <a href="mailto:vamsivalluri52@gmail.com" className="text-primary-400 hover:underline">vamsivalluri52@gmail.com</a></p>
+            <p className="text-slate-500 text-[10px] leading-normal">
+              University Relations Office,<br />
+              Kandipadu, Guntur (Dt), Andhra Pradesh
+            </p>
+          </div>
+
+          {/* Copyright & Links Column */}
+          <div className="flex flex-col md:items-end gap-3 text-slate-500">
+            <p>© 2026 PlaceTrack. All rights reserved.</p>
+            <div className="flex gap-4 font-semibold text-[11px]">
+              <span className="hover:text-white cursor-pointer">Privacy Policy</span>
+              <span className="hover:text-white cursor-pointer">Terms & Conditions</span>
+            </div>
           </div>
         </div>
       </footer>

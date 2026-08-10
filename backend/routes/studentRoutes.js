@@ -5,7 +5,8 @@ import {
   updateStudentProfile,
   uploadResume,
   uploadDocument,
-  verifyDocument
+  verifyDocument,
+  uploadPhoto
 } from '../controllers/profileController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -17,6 +18,7 @@ router.get('/', protect, authorizeRoles('PLACEMENT_MANAGER', 'ADMIN'), getStuden
 router.get('/:id', protect, getStudentById);
 router.put('/:id', protect, updateStudentProfile);
 
+router.post('/photo', protect, authorizeRoles('STUDENT'), upload.single('photo'), uploadPhoto);
 router.post('/resume', protect, authorizeRoles('STUDENT'), upload.single('resume'), uploadResume);
 router.post('/documents', protect, authorizeRoles('STUDENT'), upload.single('document'), uploadDocument);
 router.put('/:id/documents/verify', protect, authorizeRoles('PLACEMENT_MANAGER', 'ADMIN'), verifyDocument);

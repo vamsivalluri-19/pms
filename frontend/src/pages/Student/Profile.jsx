@@ -228,6 +228,30 @@ const StudentProfile = () => {
     }
   };
 
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    setAlert(null);
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    try {
+      const { data } = await api.post('/students/photo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (data.success) {
+        setProfile((prev) => ({ ...prev, photo: data.photo }));
+        setAlert({ type: 'success', msg: 'Profile picture updated successfully.' });
+      }
+    } catch (err) {
+      setAlert({ type: 'danger', msg: err.response?.data?.message || 'Failed to upload photo.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleResumeUpload = async (e) => {
     e.preventDefault();
     if (!resumeFile) return;
@@ -327,6 +351,37 @@ const StudentProfile = () => {
             {activeTab === 'personal' && (
               <div className="flex flex-col gap-5 animate-page-enter">
                 <h3 className="text-sm font-bold text-slate-800 font-display mb-2">Personal Information</h3>
+                
+                {/* Profile Photo Upload Segment */}
+                <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-slate-100 mb-2">
+                  <div className="h-20 w-20 rounded-2xl bg-gradient-to-tr from-primary-500 to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-lg font-display relative overflow-hidden shrink-0">
+                    {profile?.photo ? (
+                      <img src={profile.photo.startsWith('http') ? profile.photo : `${api.defaults.baseURL.replace('/api', '')}${profile.photo}`} alt="Avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'PT'
+                    )}
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2 text-center sm:text-left">
+                    <span className="font-bold text-slate-700">Profile Display Image</span>
+                    <p className="text-[10px] text-slate-400">Supports PNG, JPG, or JPEG format (max 5MB).</p>
+                    <div className="flex items-center gap-3 mt-1 justify-center sm:justify-start">
+                      <input
+                        type="file"
+                        id="avatar-upload"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handlePhotoUpload}
+                      />
+                      <label
+                        htmlFor="avatar-upload"
+                        className="px-4 py-2 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 cursor-pointer active:scale-95 transition-all text-[11px] text-slate-600 shadow-sm"
+                      >
+                        Choose Photo
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input label="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
                   <Input label="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} />
