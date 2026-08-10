@@ -99,7 +99,8 @@ const InterviewRoom = () => {
   useEffect(() => {
     if (!user || !roomId || !mediaReady) return;
 
-    socketRef.current = io(window.location.origin, {
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+    socketRef.current = io(socketUrl, {
       transports: ['websocket', 'polling']
     });
 
