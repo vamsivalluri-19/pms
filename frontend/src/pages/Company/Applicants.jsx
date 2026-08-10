@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import api from '../../services/api.js';
+import api, { getUploadUrl } from '../../services/api.js';
 import { Button, Input, Select, Badge, LoadingSpinner, EmptyState } from '../../components/UI.jsx';
 import { Search, User, ClipboardList, Calendar, Award, ExternalLink, Filter, Video } from 'lucide-react';
 
@@ -365,7 +365,7 @@ const CompanyApplicants = () => {
                     <td className="px-6 py-4 text-right flex items-center justify-end gap-2.5">
                       {app.student?.resume?.fileUrl && (
                         <a
-                          href={app.student.resume.fileUrl}
+                          href={getUploadUrl(app.student.resume.fileUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 border border-slate-100 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"

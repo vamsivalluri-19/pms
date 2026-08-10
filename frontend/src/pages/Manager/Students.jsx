@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import api from '../../services/api.js';
+import api, { getUploadUrl } from '../../services/api.js';
 import { Button, Input, Select, Badge, LoadingSpinner, EmptyState } from '../../components/UI.jsx';
 import { Search, FileCheck, CheckCircle2, XCircle, AlertCircle, ExternalLink } from 'lucide-react';
 
@@ -191,7 +191,7 @@ const ManagerStudents = () => {
                               >
                                 {doc.status}
                               </Badge>
-                              <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="p-1 text-slate-400 hover:text-primary-500 rounded-md">
+                              <a href={getUploadUrl(doc.fileUrl)} target="_blank" rel="noopener noreferrer" className="p-1 text-slate-400 hover:text-primary-500 rounded-md">
                                 <ExternalLink size={12} />
                               </a>
                               {doc.status === 'PENDING' && (

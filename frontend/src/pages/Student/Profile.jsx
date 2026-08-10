@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext.jsx';
 import { Button, Input, Select, Badge } from '../../components/UI.jsx';
-import api from '../../services/api.js';
+import api, { getUploadUrl } from '../../services/api.js';
 import {
   User,
   GraduationCap,
@@ -356,7 +356,7 @@ const StudentProfile = () => {
                 <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-slate-100 mb-2">
                   <div className="h-20 w-20 rounded-2xl bg-gradient-to-tr from-primary-500 to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-lg font-display relative overflow-hidden shrink-0">
                     {profile?.photo ? (
-                      <img src={profile.photo.startsWith('http') ? profile.photo : `${api.defaults.baseURL.replace('/api', '')}${profile.photo}`} alt="Avatar" className="h-full w-full object-cover" />
+                      <img src={getUploadUrl(profile.photo)} alt="Avatar" className="h-full w-full object-cover" />
                     ) : (
                       name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'PT'
                     )}
@@ -477,7 +477,7 @@ const StudentProfile = () => {
                   </div>
                   <div className="flex gap-2">
                     <a
-                      href={profile.resume.fileUrl}
+                      href={getUploadUrl(profile.resume.fileUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 text-slate-500 hover:text-primary-500 hover:bg-white rounded-lg transition-colors border border-slate-100 shadow-sm"
@@ -814,7 +814,7 @@ const StudentProfile = () => {
                           <td className="px-6 py-3.5 text-slate-500 italic">{doc.remarks || '--'}</td>
                           <td className="px-6 py-3.5 text-right">
                             <a
-                              href={doc.fileUrl}
+                              href={getUploadUrl(doc.fileUrl)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-primary-500 hover:text-primary-600 inline-flex items-center gap-1 font-bold"

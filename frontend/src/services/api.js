@@ -7,6 +7,13 @@ const api = axios.create({
   }
 });
 
+export const getUploadUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  const backendBase = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '';
+  return `${backendBase}${path}`;
+};
+
 // Intercept requests to inject bearer token
 api.interceptors.request.use(
   (config) => {

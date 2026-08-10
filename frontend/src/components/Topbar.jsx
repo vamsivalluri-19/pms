@@ -3,6 +3,7 @@ import { AuthContext } from '../context/AuthContext.jsx';
 import { NotificationContext } from '../context/NotificationContext.jsx';
 import { Bell, Menu, User, Check, Trash2, Calendar, Award, Sun, Moon, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getUploadUrl } from '../services/api.js';
 
 const Topbar = ({ toggleSidebar }) => {
   const { user, profile, theme, toggleTheme } = useContext(AuthContext);
@@ -119,7 +120,7 @@ const Topbar = ({ toggleSidebar }) => {
           >
             <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-primary-500 to-indigo-600 text-white font-bold flex items-center justify-center shadow-md shadow-blue-500/10 font-display">
               {profile?.photo ? (
-                <img src={profile.photo} alt="Avatar" className="h-full w-full object-cover rounded-xl" />
+                <img src={getUploadUrl(profile.photo)} alt="Avatar" className="h-full w-full object-cover rounded-xl" />
               ) : (
                 getInitials(profile?.name || user?.email)
               )}
