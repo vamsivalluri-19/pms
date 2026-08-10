@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import api from '../../services/api.js';
 import { Button, Input, Select, Badge, LoadingSpinner, EmptyState } from '../../components/UI.jsx';
 import { Search, User, ClipboardList, Calendar, Award, ExternalLink, Filter, Video } from 'lucide-react';
@@ -145,7 +145,7 @@ const CompanyApplicants = () => {
     setInterviewer('');
     setInterviewDate('');
     setInterviewTime('');
-    setMeetingLink('');
+    setMeetingLink(`${window.location.origin}/interview/${app._id}`);
     setInterviewNotes('');
     try {
       const { data } = await api.get(`/drives/${app.drive?._id || app.drive}/rounds`);
@@ -377,6 +377,15 @@ const CompanyApplicants = () => {
                       
                       {app.status !== 'Selected' && app.status !== 'Rejected' && (
                         <>
+                          {app.status === 'In Progress' && (
+                            <Link
+                              to={`/interview/${app._id}`}
+                              className="p-1.5 border border-blue-200 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors flex items-center justify-center shrink-0"
+                              title="Join Live Interview"
+                            >
+                              <Video size={14} />
+                            </Link>
+                          )}
                           <Button variant="secondary" size="sm" onClick={() => openScorecardModal(app)} title="Grade Scorecard">
                             <Award size={14} />
                           </Button>
@@ -451,7 +460,7 @@ const CompanyApplicants = () => {
                 <Input label="Interview Date" type="date" value={interviewDate} onChange={(e) => setInterviewDate(e.target.value)} required />
                 <Input label="Time Slot" type="time" value={interviewTime} onChange={(e) => setInterviewTime(e.target.value)} required />
               </div>
-              <Input label="Teams/Zoom Meeting Link" type="url" placeholder="https://teams.microsoft.com/..." value={meetingLink} onChange={(e) => setMeetingLink(e.target.value)} required />
+              <Input label="PlaceTrack Live Video Room Link (Auto-Generated)" value={meetingLink} disabled />
               <Input label="Candidate prep instructions notes" value={interviewNotes} onChange={(e) => setInterviewNotes(e.target.value)} />
 
               <div className="flex gap-3 justify-end mt-4 border-t border-slate-50 pt-4">

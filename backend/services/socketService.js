@@ -18,6 +18,34 @@ export const initSocket = (server) => {
       }
     });
 
+    // WebRTC Signaling Events
+    socket.on('join-room', ({ roomId, userId, userName }) => {
+      socket.join(roomId);
+      // Broadcast to other users in the room
+      socket.to(roomId).emit('user-joined', { socketId: socket.id, userId, userName });
+    });
+
+    socket.on('chat-message', ({ roomId, message }) => {
+      socket.to(roomId).emit('chat-message', message);
+    });
+
+    socket.on('offer', ({ targetSocketId, offer }) => {
+      io.to(targetSocketId).emit('offer', { senderSocketId: socket.id, offer });
+    });
+
+    socket.on('answer', ({ targetSocketId, answer }) => {
+      io.to(targetSocketId).emit('answer', { senderSocketId: socket.id, answer });
+    });
+
+    socket.on('ice-candidate', ({ targetSocketId, candidate }) => {
+      io.to(targetSocketId).emit('ice-candidate', { senderSocketId: socket.id, candidate });
+    });
+
+    socket.on('leave-room', ({ roomId }) => {
+      socket.leave(roomId);
+      socket.to(roomId).emit('user-left', { socketId: socket.id });
+    });
+
     socket.on('disconnect', () => {
       for (const [userId, socketId] of userSockets.entries()) {
         if (socketId === socket.id) {
@@ -25,6 +53,8 @@ export const initSocket = (server) => {
           break;
         }
       }
+      // Notify all rooms the socket was in
+      io.emit('user-left', { socketId: socket.id });
     });
   });
 

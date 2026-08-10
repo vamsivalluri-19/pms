@@ -53,7 +53,7 @@ const Register = () => {
         setLoading(false);
         return;
       }
-    } else {
+    } else if (role === 'COMPANY') {
       profileData = {
         name: companyName,
         recruiterName,
@@ -62,6 +62,16 @@ const Register = () => {
       };
       if (!companyName || !recruiterName) {
         setError('Please fill in all company credentials.');
+        setLoading(false);
+        return;
+      }
+    } else if (role === 'PLACEMENT_MANAGER') {
+      profileData = {
+        name,
+        department
+      };
+      if (!name || !department) {
+        setError('Please fill in all manager credentials.');
         setLoading(false);
         return;
       }
@@ -165,29 +175,41 @@ const Register = () => {
           )}
 
           {/* Visual Cards Selector for Roles */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-3 mb-6">
             <div
               onClick={() => { setRole('STUDENT'); setError(''); }}
-              className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
+              className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
                 role === 'STUDENT'
                   ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
                   : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
               }`}
             >
-              <GraduationCap size={22} className={role === 'STUDENT' ? 'text-primary-500' : 'text-slate-400'} />
-              <span className="text-xs font-bold font-display">I am a Student</span>
+              <GraduationCap size={20} className={role === 'STUDENT' ? 'text-primary-500' : 'text-slate-400'} />
+              <span className="text-[11px] font-bold font-display">Student</span>
             </div>
 
             <div
               onClick={() => { setRole('COMPANY'); setError(''); }}
-              className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
+              className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
                 role === 'COMPANY'
                   ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
                   : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
               }`}
             >
-              <Briefcase size={20} className={role === 'COMPANY' ? 'text-primary-500' : 'text-slate-400'} />
-              <span className="text-xs font-bold font-display">I am a Recruiter</span>
+              <Briefcase size={18} className={role === 'COMPANY' ? 'text-primary-500' : 'text-slate-400'} />
+              <span className="text-[11px] font-bold font-display">Recruiter</span>
+            </div>
+
+            <div
+              onClick={() => { setRole('PLACEMENT_MANAGER'); setError(''); setName(''); setDepartment(''); }}
+              className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
+                role === 'PLACEMENT_MANAGER'
+                  ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
+                  : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
+              }`}
+            >
+              <ShieldCheck size={20} className={role === 'PLACEMENT_MANAGER' ? 'text-primary-500' : 'text-slate-400'} />
+              <span className="text-[11px] font-bold font-display">Manager</span>
             </div>
           </div>
 
@@ -284,7 +306,7 @@ const Register = () => {
                   />
                 </div>
               </div>
-            ) : (
+            ) : role === 'COMPANY' ? (
               /* Recruiter Role Fields */
               <div className="flex flex-col gap-4 animate-page-enter">
                 <p className="font-bold text-slate-700 uppercase tracking-wider text-[9px] font-display">Corporate Details</p>
@@ -311,6 +333,29 @@ const Register = () => {
                     value={recruiterPhone}
                     onChange={(e) => setRecruiterPhone(e.target.value)}
                     disabled={loading}
+                  />
+                </div>
+              </div>
+            ) : (
+              /* Placement Manager Role Fields */
+              <div className="flex flex-col gap-4 animate-page-enter">
+                <p className="font-bold text-slate-700 uppercase tracking-wider text-[9px] font-display">Institutional Details</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Full Name"
+                    placeholder="e.g. Dr. Rajesh Kumar"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={loading}
+                    required
+                  />
+                  <Input
+                    label="Department / Office"
+                    placeholder="e.g. Corporate Relations"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    disabled={loading}
+                    required
                   />
                 </div>
               </div>

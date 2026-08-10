@@ -139,7 +139,8 @@ const adminSchema = new mongoose.Schema({
     required: true
   },
   name: { type: String, required: true },
-  phone: String
+  phone: String,
+  address: String
 }, { timestamps: true });
 
 export const User = mongoose.model('User', userSchema);

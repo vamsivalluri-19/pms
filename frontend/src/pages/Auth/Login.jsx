@@ -2,13 +2,14 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext.jsx';
 import { Button, Input } from '../../components/UI.jsx';
-import { GraduationCap, ArrowLeft, ShieldCheck, Cpu, Zap } from 'lucide-react';
+import { GraduationCap, ArrowLeft, ShieldCheck, Cpu, Zap, Briefcase, UserCheck } from 'lucide-react';
 import bgImg from '../../assets/auth_background.png';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
   
+  const [role, setRole] = useState('STUDENT');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -122,6 +123,57 @@ const Login = () => {
             </div>
           )}
 
+          {/* Visual Cards Selector for Roles */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div
+              onClick={() => { setRole('STUDENT'); }}
+              className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 ${
+                role === 'STUDENT'
+                  ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
+                  : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
+              }`}
+            >
+              <GraduationCap size={18} className={role === 'STUDENT' ? 'text-primary-500' : 'text-slate-400'} />
+              <span className="text-[10px] font-bold font-display">Student</span>
+            </div>
+
+            <div
+              onClick={() => { setRole('COMPANY'); }}
+              className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 ${
+                role === 'COMPANY'
+                  ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
+                  : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
+              }`}
+            >
+              <Briefcase size={18} className={role === 'COMPANY' ? 'text-primary-500' : 'text-slate-400'} />
+              <span className="text-[10px] font-bold font-display">Recruiter</span>
+            </div>
+
+            <div
+              onClick={() => { setRole('PLACEMENT_MANAGER'); }}
+              className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 ${
+                role === 'PLACEMENT_MANAGER'
+                  ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
+                  : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
+              }`}
+            >
+              <ShieldCheck size={18} className={role === 'PLACEMENT_MANAGER' ? 'text-primary-500' : 'text-slate-400'} />
+              <span className="text-[10px] font-bold font-display">Manager</span>
+            </div>
+
+            <div
+              onClick={() => { setRole('ADMIN'); }}
+              className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 ${
+                role === 'ADMIN'
+                  ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
+                  : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
+              }`}
+            >
+              <UserCheck size={18} className={role === 'ADMIN' ? 'text-primary-500' : 'text-slate-400'} />
+              <span className="text-[10px] font-bold font-display">Admin</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-5 text-xs">
             <Input
               label="Account Email"
@@ -148,9 +200,9 @@ const Login = () => {
                 <input type="checkbox" className="rounded border-slate-300 text-primary-500 focus:ring-primary-500/20" />
                 Remember credentials
               </label>
-              <span className="text-primary-500 hover:text-primary-600 cursor-pointer">
+              <Link to="/forgot-password" className="text-primary-500 hover:text-primary-600 cursor-pointer">
                 Forgot Password?
-              </span>
+              </Link>
             </div>
 
             <Button variant="primary" type="submit" className="w-full mt-3 py-3 shadow-md bg-primary-600 hover:bg-primary-700" disabled={loading}>

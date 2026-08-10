@@ -94,6 +94,9 @@ export const chatbotQuery = async (req, res) => {
           cgpa: student.cgpa,
           department: student.department,
           skills: student.skills,
+          projects: student.projects || [],
+          internships: student.internships || [],
+          certifications: student.certifications || [],
           drives: drives.map(d => ({ name: d.name, date: d.driveDate })),
           applications: applications.map(a => ({ driveName: a.drive?.name, status: a.status, round: a.currentRound }))
         };

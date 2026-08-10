@@ -277,8 +277,8 @@ const StudentDashboard = () => {
                   <div className="p-3 rounded-full bg-blue-50 text-blue-500">
                     <MessageSquare size={24} />
                   </div>
-                  <p className="text-xs font-bold text-slate-800 font-display">Hi, I am your PlaceTrack assistant!</p>
-                  <p className="text-[11px] text-slate-400 max-w-[200px]">Ask me: "Am I eligible for Microsoft?", "When is my interview?", or "How do I prepare?"</p>
+                  <p className="text-xs font-bold text-slate-800 font-display">Hi, I am your PlaceTrack AI Coordinator!</p>
+                  <p className="text-[11px] text-slate-400 max-w-[220px]">Ask me: "Start Mock Practice", "Interview prep questions for my skills", or "Evaluate my resume against Microsoft job criteria"</p>
                 </div>
               )}
               {chatMessages.map((msg, idx) => (

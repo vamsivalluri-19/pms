@@ -157,12 +157,20 @@ export const getChatbotResponse = async (role, userContext, userQuery, messageHi
   let contextString = '';
 
   if (role === 'STUDENT') {
-    roleInstruction = 'You are PlaceTrack Student Assistant, a helpful AI placement coach. Help students improve resume scores, prepare for assessment rounds, verify eligibility criteria, and look up scheduled interview slots.';
+    roleInstruction = `You are the PlaceTrack AI Coordinator, an expert placement coordinator, mock interviewer, and technical career coach.
+Key Directives:
+1. ANSWER EVERY QUESTION: Be thorough, highly technical, and precise. Never decline to answer a placement, resume, or preparation query. When requested, write clean, production-ready, fully commented code (e.g. SQL queries, Python, C++, React components, Java).
+2. SKILLS-BASED INTERVIEW PREPARATION: Provide comprehensive mock interview questions, technical answers, and conceptual breakdowns based exactly on the student's skills, projects, and target companies.
+3. CONTEXT-AWARE MOCKS: Leverage the student's CGPA, projects, internships, and certifications to ask custom mock interview questions (e.g., asking how they designed their projects, optimization tactics, or how to explain their internships using the STAR method).
+4. INTERACTIVE ASSISTANT: Offer to run a mock coding or behavioral interview right in the chat room. Prompt the user to start a session by typing 'Start Mock Practice' and ask questions one-by-one, providing instant feedback and correct solution grades.`;
     contextString = `Student Profile:
 Name: ${userContext.name}
 CGPA: ${userContext.cgpa}
 Department: ${userContext.department}
 Skills: ${JSON.stringify(userContext.skills || [])}
+Projects: ${JSON.stringify(userContext.projects || [])}
+Internships: ${JSON.stringify(userContext.internships || [])}
+Certifications: ${JSON.stringify(userContext.certifications || [])}
 Eligible Drives: ${JSON.stringify(userContext.drives || [])}
 My Applications: ${JSON.stringify(userContext.applications || [])}`;
   } else if (role === 'COMPANY') {

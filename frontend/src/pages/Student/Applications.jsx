@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext.jsx';
 import api from '../../services/api.js';
 import { Button, LoadingSpinner, EmptyState, Badge } from '../../components/UI.jsx';
@@ -171,14 +171,12 @@ const StudentApplications = () => {
                     <p className="font-bold text-slate-700 flex items-center gap-1.5"><Clock size={12} /> Mode: Video Assessment Interview</p>
                     <p className="text-[10px] text-slate-500">Contact coordinator or recruiter panel for any rescheduling query.</p>
                     
-                    <a
-                      href="https://zoom.us"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link
+                      to={`/interview/${app._id}`}
                       className="mt-2 text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 text-[10px]"
                     >
                       <Video size={12} /> Launch Video Interview
-                    </a>
+                    </Link>
                   </div>
                 </div>
               ))}

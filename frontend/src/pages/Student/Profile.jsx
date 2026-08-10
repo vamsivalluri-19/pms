@@ -12,8 +12,12 @@ import {
   Trash2,
   Download,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  Sparkles,
+  Plus,
+  Printer
 } from 'lucide-react';
+import { getTemplateCSS, renderTemplateHTML } from '../../components/ResumeTemplates.jsx';
 
 const StudentProfile = () => {
   const location = useLocation();
@@ -57,6 +61,142 @@ const StudentProfile = () => {
   const [resumeFile, setResumeFile] = useState(null);
   const [documentFile, setDocumentFile] = useState(null);
   const [docName, setDocName] = useState('10th Certificate');
+
+  // ATS Resume Builder States
+  const [selectedTemplate, setSelectedTemplate] = useState('classic');
+  const [resumeData, setResumeData] = useState({
+    name: profile?.name || '',
+    email: profile?.email || '',
+    phone: profile?.phone || '',
+    location: profile?.address || '',
+    github: '',
+    linkedin: '',
+    portfolio: '',
+    summary: 'A highly motivated developer with a cumulative CGPA of ' + (profile?.cgpa || '8.5') + '. Experienced in software engineering and web application development. Seeking to leverage technical skills in a challenging placement role.',
+    education: [
+      { degree: profile?.degree || 'B.Tech', institution: 'Institute of Technology', year: profile?.batch || '2022-2026', gpa: profile?.cgpa || '' }
+    ],
+    experience: [
+      { company: 'Tech Internships', role: 'Software Engineer Intern', duration: 'Jun 2025 - Aug 2025', description: '- Built frontend dashboards using React and TailwindCSS.\n- Refactored server APIs to decrease load times.' }
+    ],
+    projects: [
+      { title: 'PlaceTrack Application', technologies: 'React, Node.js, MongoDB', description: '- Engineered real-time recruiter statistics and notifications.\n- Integrated WebRTC-based local video meeting call features.', link: 'https://github.com' }
+    ],
+    achievements: [
+      { description: 'Received 1st place award in national university coding hackathon.' }
+    ],
+    certifications: [
+      { name: 'Certified Full-Stack Developer', authority: 'Coursera' }
+    ],
+    skills: profile?.skills || []
+  });
+
+  const addEducation = () => {
+    setResumeData(prev => ({
+      ...prev,
+      education: [...prev.education, { degree: '', institution: '', year: '', gpa: '' }]
+    }));
+  };
+
+  const removeEducation = (index) => {
+    setResumeData(prev => ({
+      ...prev,
+      education: prev.education.filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const addExperience = () => {
+    setResumeData(prev => ({
+      ...prev,
+      experience: [...prev.experience, { company: '', role: '', duration: '', description: '' }]
+    }));
+  };
+
+  const removeExperience = (index) => {
+    setResumeData(prev => ({
+      ...prev,
+      experience: prev.experience.filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const addProject = () => {
+    setResumeData(prev => ({
+      ...prev,
+      projects: [...prev.projects, { title: '', technologies: '', description: '', link: '' }]
+    }));
+  };
+
+  const removeProject = (index) => {
+    setResumeData(prev => ({
+      ...prev,
+      projects: prev.projects.filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const addAchievement = () => {
+    setResumeData(prev => ({
+      ...prev,
+      achievements: [...prev.achievements, { description: '' }]
+    }));
+  };
+
+  const removeAchievement = (index) => {
+    setResumeData(prev => ({
+      ...prev,
+      achievements: prev.achievements.filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const addCertification = () => {
+    setResumeData(prev => ({
+      ...prev,
+      certifications: [...prev.certifications, { name: '', authority: '' }]
+    }));
+  };
+
+  const removeCertification = (index) => {
+    setResumeData(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const handlePrintResume = () => {
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow.document;
+    const htmlContent = renderTemplateHTML(selectedTemplate, resumeData);
+    const cssContent = getTemplateCSS(selectedTemplate);
+
+    doc.open();
+    doc.write(`
+      <html>
+        <head>
+          <style>${cssContent}</style>
+        </head>
+        <body>
+          <div class="no-print" style="padding: 10px; background: #eff6ff; text-align: center; font-family: sans-serif; font-size: 10pt; color: #1d4ed8; font-weight: bold; border-bottom: 1px solid #bfdbfe;">
+            PlaceTrack Live PDF Export
+          </div>
+          ${htmlContent}
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(() => {
+                window.parent.document.body.removeChild(window.frameElement);
+              }, 1000);
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    doc.close();
+  };
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
@@ -162,6 +302,7 @@ const StudentProfile = () => {
             { id: 'academic', label: 'Academic Standing', icon: <GraduationCap size={16} /> },
             { id: 'skills', label: 'Skills & Development', icon: <Briefcase size={16} /> },
             { id: 'resume', label: 'Resume management', icon: <FileCheck size={16} /> },
+            { id: 'resume-builder', label: 'ATS Resume Builder', icon: <Sparkles size={16} className="text-violet-500" /> },
             { id: 'documents', label: 'Document verification', icon: <FileCheck size={16} /> }
           ].map((tab) => (
             <button
@@ -292,7 +433,7 @@ const StudentProfile = () => {
                 </div>
               ) : (
                 <div className="p-6 border border-dashed border-slate-200 rounded-xl text-center flex flex-col items-center justify-center gap-3">
-                  <AlertCircle size={24} className="text-slate-400 animate-pulse-slow" />
+                  <AlertCircle size={24} className="text-slate-400" />
                   <p className="text-xs text-slate-500 font-semibold">No resume uploaded yet. Recruiter drives require an active resume PDF.</p>
                 </div>
               )}
@@ -312,6 +453,272 @@ const StudentProfile = () => {
                   <Upload size={14} /> Upload Resume
                 </Button>
               </form>
+            </div>
+          )}
+
+          {activeTab === 'resume-builder' && (
+            <div className="flex flex-col gap-6 animate-page-enter text-xs text-left">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800 font-display">ATS-Friendly Resume Builder</h3>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Fill details and export Overleaf styled PDF templates</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Select
+                    options={[
+                      { value: 'classic', label: 'LaTeX Classic (Serif Academic)' },
+                      { value: 'modern', label: 'Modern Tech (Sans-Serif)' },
+                      { value: 'two-column', label: 'Executive Two-Column' }
+                    ]}
+                    value={selectedTemplate}
+                    onChange={(e) => setSelectedTemplate(e.target.value)}
+                  />
+                  <Button variant="primary" onClick={handlePrintResume} className="bg-emerald-500 hover:bg-emerald-600 border-none gap-1.5 shadow-none py-2 shrink-0">
+                    <Printer size={13} /> Print/Save PDF
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* Form Controls Column */}
+                <div className="lg:col-span-6 flex flex-col gap-5 max-h-[70vh] overflow-y-auto pr-2">
+                  
+                  {/* Contact Block */}
+                  <div className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 flex flex-col gap-3">
+                    <span className="font-bold text-slate-700">Contact & Social Links</span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input label="Name" value={resumeData.name} onChange={(e) => setResumeData({...resumeData, name: e.target.value})} />
+                      <Input label="Email" type="email" value={resumeData.email} onChange={(e) => setResumeData({...resumeData, email: e.target.value})} />
+                      <Input label="Phone" value={resumeData.phone} onChange={(e) => setResumeData({...resumeData, phone: e.target.value})} />
+                      <Input label="Location" value={resumeData.location} onChange={(e) => setResumeData({...resumeData, location: e.target.value})} />
+                      <Input label="GitHub Link" value={resumeData.github} onChange={(e) => setResumeData({...resumeData, github: e.target.value})} />
+                      <Input label="LinkedIn Link" value={resumeData.linkedin} onChange={(e) => setResumeData({...resumeData, linkedin: e.target.value})} />
+                      <div className="col-span-2">
+                        <Input label="Portfolio / Leetcode Link" value={resumeData.portfolio} onChange={(e) => setResumeData({...resumeData, portfolio: e.target.value})} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summary Block */}
+                  <div className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 flex flex-col gap-3">
+                    <span className="font-bold text-slate-700">Professional Summary</span>
+                    <textarea
+                      className="w-full p-2.5 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-primary-500 font-sans"
+                      rows="4"
+                      value={resumeData.summary}
+                      onChange={(e) => setResumeData({...resumeData, summary: e.target.value})}
+                    />
+                  </div>
+
+                  {/* Education List */}
+                  <div className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-slate-700">Education Records</span>
+                      <button onClick={addEducation} className="p-1 bg-primary-50 hover:bg-primary-100 text-primary-600 rounded flex items-center gap-0.5 font-bold cursor-pointer">
+                        <Plus size={12} /> Add
+                      </button>
+                    </div>
+                    {resumeData.education.map((edu, idx) => (
+                      <div key={idx} className="p-3 border border-slate-100 bg-white rounded-xl flex flex-col gap-3 relative">
+                        <button onClick={() => removeEducation(idx)} className="absolute top-2 right-2 text-rose-500 hover:text-rose-700 font-bold">×</button>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          <Input label="Degree / Course" value={edu.degree} onChange={(e) => {
+                            const list = [...resumeData.education];
+                            list[idx].degree = e.target.value;
+                            setResumeData({...resumeData, education: list});
+                          }} />
+                          <Input label="Graduation Year" value={edu.year} onChange={(e) => {
+                            const list = [...resumeData.education];
+                            list[idx].year = e.target.value;
+                            setResumeData({...resumeData, education: list});
+                          }} />
+                          <Input label="Institution" value={edu.institution} onChange={(e) => {
+                            const list = [...resumeData.education];
+                            list[idx].institution = e.target.value;
+                            setResumeData({...resumeData, education: list});
+                          }} />
+                          <Input label="GPA / Percentage" value={edu.gpa} onChange={(e) => {
+                            const list = [...resumeData.education];
+                            list[idx].gpa = e.target.value;
+                            setResumeData({...resumeData, education: list});
+                          }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Experience List */}
+                  <div className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-slate-700">Experience / Internships</span>
+                      <button onClick={addExperience} className="p-1 bg-primary-50 hover:bg-primary-100 text-primary-600 rounded flex items-center gap-0.5 font-bold cursor-pointer">
+                        <Plus size={12} /> Add
+                      </button>
+                    </div>
+                    {resumeData.experience.map((exp, idx) => (
+                      <div key={idx} className="p-3 border border-slate-100 bg-white rounded-xl flex flex-col gap-3 relative">
+                        <button onClick={() => removeExperience(idx)} className="absolute top-2 right-2 text-rose-500 hover:text-rose-700 font-bold">×</button>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          <Input label="Company Name" value={exp.company} onChange={(e) => {
+                            const list = [...resumeData.experience];
+                            list[idx].company = e.target.value;
+                            setResumeData({...resumeData, experience: list});
+                          }} />
+                          <Input label="Duration (e.g. Jun-Aug 2025)" value={exp.duration} onChange={(e) => {
+                            const list = [...resumeData.experience];
+                            list[idx].duration = e.target.value;
+                            setResumeData({...resumeData, experience: list});
+                          }} />
+                          <div className="col-span-2">
+                            <Input label="Role Title" value={exp.role} onChange={(e) => {
+                              const list = [...resumeData.experience];
+                              list[idx].role = e.target.value;
+                              setResumeData({...resumeData, experience: list});
+                            }} />
+                          </div>
+                          <div className="col-span-2 flex flex-col gap-1">
+                            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Bullet description (One per line)</label>
+                            <textarea
+                              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none"
+                              rows="3"
+                              value={exp.description}
+                              onChange={(e) => {
+                                const list = [...resumeData.experience];
+                                list[idx].description = e.target.value;
+                                setResumeData({...resumeData, experience: list});
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Projects List */}
+                  <div className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-slate-700">Projects</span>
+                      <button onClick={addProject} className="p-1 bg-primary-50 hover:bg-primary-100 text-primary-600 rounded flex items-center gap-0.5 font-bold cursor-pointer">
+                        <Plus size={12} /> Add
+                      </button>
+                    </div>
+                    {resumeData.projects.map((proj, idx) => (
+                      <div key={idx} className="p-3 border border-slate-100 bg-white rounded-xl flex flex-col gap-3 relative">
+                        <button onClick={() => removeProject(idx)} className="absolute top-2 right-2 text-rose-500 hover:text-rose-700 font-bold">×</button>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          <Input label="Project Title" value={proj.title} onChange={(e) => {
+                            const list = [...resumeData.projects];
+                            list[idx].title = e.target.value;
+                            setResumeData({...resumeData, projects: list});
+                          }} />
+                          <Input label="Tech Stack (e.g. React, SQL)" value={proj.technologies} onChange={(e) => {
+                            const list = [...resumeData.projects];
+                            list[idx].technologies = e.target.value;
+                            setResumeData({...resumeData, projects: list});
+                          }} />
+                          <div className="col-span-2">
+                            <Input label="Project Repo URL Link" value={proj.link} onChange={(e) => {
+                              const list = [...resumeData.projects];
+                              list[idx].link = e.target.value;
+                              setResumeData({...resumeData, projects: list});
+                            }} />
+                          </div>
+                          <div className="col-span-2 flex flex-col gap-1">
+                            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Bullet description (One per line)</label>
+                            <textarea
+                              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none"
+                              rows="3"
+                              value={proj.description}
+                              onChange={(e) => {
+                                const list = [...resumeData.projects];
+                                list[idx].description = e.target.value;
+                                setResumeData({...resumeData, projects: list});
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Skills Block */}
+                  <div className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 flex flex-col gap-3">
+                    <span className="font-bold text-slate-700">Skills (Comma-separated)</span>
+                    <Input
+                      placeholder="React, Java, SQL, Python"
+                      value={resumeData.skills.join(', ')}
+                      onChange={(e) => setResumeData({...resumeData, skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})}
+                    />
+                  </div>
+
+                  {/* Certifications List */}
+                  <div className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-slate-700">Certifications</span>
+                      <button onClick={addCertification} className="p-1 bg-primary-50 hover:bg-primary-100 text-primary-600 rounded flex items-center gap-0.5 font-bold cursor-pointer">
+                        <Plus size={12} /> Add
+                      </button>
+                    </div>
+                    {resumeData.certifications.map((cert, idx) => (
+                      <div key={idx} className="p-3 border border-slate-100 bg-white rounded-xl flex flex-col gap-2 relative">
+                        <button onClick={() => removeCertification(idx)} className="absolute top-2 right-2 text-rose-500 hover:text-rose-700 font-bold">×</button>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          <Input label="Certification Name" value={cert.name} onChange={(e) => {
+                            const list = [...resumeData.certifications];
+                            list[idx].name = e.target.value;
+                            setResumeData({...resumeData, certifications: list});
+                          }} />
+                          <Input label="Authority / Issuer" value={cert.authority} onChange={(e) => {
+                            const list = [...resumeData.certifications];
+                            list[idx].authority = e.target.value;
+                            setResumeData({...resumeData, certifications: list});
+                          }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Achievements List */}
+                  <div className="p-4 border border-slate-100 rounded-xl bg-slate-50/50 flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-slate-700">Achievements</span>
+                      <button onClick={addAchievement} className="p-1 bg-primary-50 hover:bg-primary-100 text-primary-600 rounded flex items-center gap-0.5 font-bold cursor-pointer">
+                        <Plus size={12} /> Add
+                      </button>
+                    </div>
+                    {resumeData.achievements.map((ach, idx) => (
+                      <div key={idx} className="p-3 border border-slate-100 bg-white rounded-xl flex flex-col gap-2 relative">
+                        <button onClick={() => removeAchievement(idx)} className="absolute top-2 right-2 text-rose-500 hover:text-rose-700 font-bold">×</button>
+                        <div className="mt-1">
+                          <Input label="Achievement description" value={ach.description} onChange={(e) => {
+                            const list = [...resumeData.achievements];
+                            list[idx].description = e.target.value;
+                            setResumeData({...resumeData, achievements: list});
+                          }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+
+                {/* PDF Live Mock Preview Column */}
+                <div className="lg:col-span-6 flex flex-col gap-3 h-full">
+                  <div className="p-3 bg-blue-50/50 border border-blue-100 text-[10px] rounded-xl text-blue-700 leading-normal">
+                    ⚠️ <strong>How to activate resume:</strong> After clicking <strong>Print/Save PDF</strong>, select <strong>Save as PDF</strong> as the printer destination in your browser. Then, upload this file inside the <strong>Resume Management</strong> tab to apply for corporate drives!
+                  </div>
+                  <div className="border border-slate-200 bg-slate-100/50 p-4 rounded-xl shadow-xs max-h-[70vh] overflow-y-auto flex justify-center">
+                    <div className="bg-white p-6 shadow-md w-full border border-slate-200 max-w-[21cm] min-h-[29.7cm] flex flex-col gap-1 print-preview text-slate-800">
+                      <style>
+                        {getTemplateCSS(selectedTemplate)}
+                      </style>
+                      <div dangerouslySetInnerHTML={{ __html: renderTemplateHTML(selectedTemplate, resumeData) }} />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
           )}
 

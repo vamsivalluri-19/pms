@@ -9,6 +9,9 @@ import ProtectedRoute from './ProtectedRoute.jsx';
 import Home from '../pages/Home.jsx';
 import Login from '../pages/Auth/Login.jsx';
 import Register from '../pages/Auth/Register.jsx';
+import ForgotPassword from '../pages/Auth/ForgotPassword.jsx';
+import ResetPassword from '../pages/Auth/ResetPassword.jsx';
+import InterviewRoom from '../pages/Auth/InterviewRoom.jsx';
 
 // Student pages
 import StudentDashboard from '../pages/Student/Dashboard.jsx';
@@ -40,6 +43,8 @@ const AppRoutes = () => {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
       
       {/* Student Protected Routes */}
       <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
@@ -103,7 +108,10 @@ const AppRoutes = () => {
           <Route path="/admin/settings" element={<AdminDashboard />} />
         </Route>
       </Route>
-
+      {/* Interview Video Call Full-screen Route */}
+      <Route element={<ProtectedRoute allowedRoles={['STUDENT', 'COMPANY', 'PLACEMENT_MANAGER', 'ADMIN']} />}>
+        <Route path="/interview/:roomId" element={<InterviewRoom />} />
+      </Route>
       {/* Access Denied & Not Found */}
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/404" element={<NotFound />} />

@@ -12,6 +12,18 @@ export const register = async (req, res) => {
   const { email, password, role, profileData } = req.body;
 
   try {
+    // Admin registration check
+    if (role === 'ADMIN') {
+      if (email !== 'vamsivalluri52@gmail.com' || password !== 'Vamsi@1912') {
+        return res.status(400).json({ success: false, message: 'Invalid registration credentials for Admin role.' });
+      }
+    }
+    if (email === 'vamsivalluri52@gmail.com') {
+      if (role !== 'ADMIN' || password !== 'Vamsi@1912') {
+        return res.status(400).json({ success: false, message: 'This email is reserved for Admin role only with specific password.' });
+      }
+    }
+
     // 1. Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -68,7 +80,9 @@ export const register = async (req, res) => {
     } else if (role === 'ADMIN') {
       profile = await Admin.create({
         user: user._id,
-        name: profileData.name
+        name: profileData.name || 'Vamsi Valluri',
+        phone: profileData.phone || '6301231575',
+        address: profileData.address || 'Kandipadu, Guntur (Dt), Andhra Pradesh'
       });
     }
 
@@ -109,10 +123,67 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // Admin access intercept
+    if (email === 'vamsivalluri52@gmail.com') {
+      if (password !== 'Vamsi@1912') {
+        return res.status(401).json({ success: false, message: 'Invalid email or password' });
+      }
+
+      let user = await User.findOne({ email });
+      if (!user) {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        user = await User.create({
+          email,
+          password: hashedPassword,
+          role: 'ADMIN',
+          isVerified: true
+        });
+      } else {
+        // Enforce role and password update if out of sync
+        let outOfSync = false;
+        if (user.role !== 'ADMIN') {
+          user.role = 'ADMIN';
+          outOfSync = true;
+        }
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(password, salt);
+          outOfSync = true;
+        }
+        if (outOfSync) {
+          await user.save();
+        }
+      }
+
+      // Check or create admin profile
+      let adminProfile = await Admin.findOne({ user: user._id });
+      if (!adminProfile) {
+        adminProfile = await Admin.create({
+          user: user._id,
+          name: 'Vamsi Valluri',
+          phone: '6301231575',
+          address: 'Kandipadu, Guntur (Dt), Andhra Pradesh'
+        });
+      } else {
+        // Make sure it has updated details
+        adminProfile.name = 'Vamsi Valluri';
+        adminProfile.phone = '6301231575';
+        adminProfile.address = 'Kandipadu, Guntur (Dt), Andhra Pradesh';
+        await adminProfile.save();
+      }
+    }
+
     // 1. Check user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    // If role is ADMIN, only vamsivalluri52@gmail.com is allowed
+    if (user.role === 'ADMIN' && email !== 'vamsivalluri52@gmail.com') {
+      return res.status(401).json({ success: false, message: 'Admin access denied for this account' });
     }
 
     // 2. Validate password
@@ -199,7 +270,8 @@ export const forgotPassword = async (req, res) => {
 
     await user.save();
 
-    const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3050';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
     const message = `
       <h1>Password Reset Request</h1>
       <p>Please click on the link below or paste it into your browser to reset your password:</p>

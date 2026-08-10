@@ -47,6 +47,30 @@ const AdminDashboard = () => {
   
   // Users Management State
   const [usersList, setUsersList] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [drives, setDrives] = useState([]);
+
+  const getFilteredUsers = () => {
+    const path = location.pathname;
+    if (path === '/admin/students') {
+      return usersList.filter(u => u.role === 'STUDENT');
+    }
+    if (path === '/admin/companies') {
+      return usersList.filter(u => u.role === 'COMPANY');
+    }
+    if (path === '/admin/managers') {
+      return usersList.filter(u => u.role === 'PLACEMENT_MANAGER');
+    }
+    return usersList; // Shows all users for /admin/users or default dashboard path
+  };
+
+  const getUserTabTitle = () => {
+    const path = location.pathname;
+    if (path === '/admin/students') return 'Student Login Accounts';
+    if (path === '/admin/companies') return 'Recruiter Login Accounts';
+    if (path === '/admin/managers') return 'Placement Manager Accounts';
+    return 'User Logins';
+  };
   
   // Academic Configurator State
   const [academicData, setAcademicData] = useState({ departments: [], courses: [], batches: [] });
@@ -83,6 +107,26 @@ const AdminDashboard = () => {
           courses: academicRes.data.courses,
           batches: academicRes.data.batches
         });
+      }
+
+      // Fetch jobs
+      try {
+        const jobsRes = await api.get('/jobs');
+        if (jobsRes.data.success) {
+          setJobs(jobsRes.data.jobs || []);
+        }
+      } catch (jobsErr) {
+        console.error('Error fetching jobs:', jobsErr);
+      }
+
+      // Fetch drives
+      try {
+        const drivesRes = await api.get('/drives');
+        if (drivesRes.data.success) {
+          setDrives(drivesRes.data.drives || []);
+        }
+      } catch (drivesErr) {
+        console.error('Error fetching drives:', drivesErr);
       }
     } catch (err) {
       console.error(err);
@@ -191,7 +235,7 @@ const AdminDashboard = () => {
               activeTab === 'users' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            User Logins ({usersList.length})
+            {getUserTabTitle()} ({getFilteredUsers().length})
           </button>
           <button
             onClick={() => setActiveTab('academic')}
@@ -299,7 +343,7 @@ const AdminDashboard = () => {
 
       {activeTab === 'users' && (
         <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-6">
-          <h3 className="text-sm font-bold text-slate-800 font-display">User Accounts Manager</h3>
+          <h3 className="text-sm font-bold text-slate-800 font-display">{getUserTabTitle()} Manager</h3>
           <div className="overflow-hidden border border-slate-50 rounded-xl">
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
@@ -313,7 +357,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {usersList.map((usr) => (
+                  {getFilteredUsers().map((usr) => (
                     <tr key={usr._id} className="hover:bg-slate-50/50">
                       <td className="px-6 py-3.5 font-semibold text-slate-800">{usr.email}</td>
                       <td className="px-6 py-3.5">
@@ -460,23 +504,54 @@ const AdminDashboard = () => {
       )}
       {activeTab === 'jobs-drives' && (
         <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-6 text-xs text-left">
-          <h3 className="text-sm font-bold text-slate-800 font-display">System Jobs & Placement Drives</h3>
-          <div className="p-4 border border-blue-100 bg-blue-50/20 rounded-xl leading-relaxed text-slate-600">
-            Showcases all corporate openings registered in MongoDB. Coordinator placement managers approve recruiter requests before publishing.
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { title: 'Software Engineer', comp: 'Microsoft', package: '12 LPA', type: 'Full Time' },
-              { title: 'Data Scientist', comp: 'Google', package: '18 LPA', type: 'Full Time' },
-              { title: 'QA Engineer', comp: 'Accenture', package: '8 LPA', type: 'Internship' }
-            ].map((j, idx) => (
-              <div key={idx} className="p-4 border border-slate-100 rounded-xl bg-slate-50 flex flex-col gap-2">
-                <span className="font-bold text-slate-800 leading-tight">{j.title}</span>
-                <span className="text-[10px] text-slate-400 font-semibold uppercase">{j.comp} • {j.type}</span>
-                <span className="text-xs text-blue-600 font-extrabold mt-1">{j.package}</span>
+          {location.pathname === '/admin/jobs' ? (
+            <>
+              <h3 className="text-sm font-bold text-slate-800 font-display">System Job Listings</h3>
+              <div className="p-4 border border-blue-100 bg-blue-50/20 rounded-xl leading-relaxed text-slate-600">
+                Showcases all active corporate job postings registered in MongoDB.
               </div>
-            ))}
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {jobs.length === 0 ? (
+                  <div className="col-span-3">
+                    <EmptyState title="No Jobs Found" message="There are no jobs registered in the system." />
+                  </div>
+                ) : (
+                  jobs.map((j) => (
+                    <div key={j._id} className="p-4 border border-slate-100 rounded-xl bg-slate-50 flex flex-col gap-2">
+                      <span className="font-bold text-slate-800 leading-tight">{j.title}</span>
+                      <span className="text-[10px] text-slate-400 font-semibold uppercase">{j.company?.name || 'Recruiter'} • {j.jobType}</span>
+                      <span className="text-xs text-blue-600 font-extrabold mt-1">{j.ctc} LPA</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-sm font-bold text-slate-800 font-display">Placement Drives</h3>
+              <div className="p-4 border border-blue-100 bg-blue-50/20 rounded-xl leading-relaxed text-slate-600">
+                Showcases all scheduled placement drives and their approval states.
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {drives.length === 0 ? (
+                  <div className="col-span-3">
+                    <EmptyState title="No Drives Found" message="There are no drives scheduled in the system." />
+                  </div>
+                ) : (
+                  drives.map((d) => (
+                    <div key={d._id} className="p-4 border border-slate-100 rounded-xl bg-slate-50 flex flex-col gap-2">
+                      <span className="font-bold text-slate-800 leading-tight">{d.name}</span>
+                      <span className="text-[10px] text-slate-400 font-semibold uppercase">{d.company?.name || 'Recruiter'} • {d.mode}</span>
+                      <span className="text-[10px] text-slate-500 font-semibold mt-1">Date: {new Date(d.driveDate).toLocaleDateString()}</span>
+                      <Badge className="w-fit mt-1" status={d.status === 'Completed' ? 'success' : d.status === 'Registration Open' ? 'primary' : 'warning'}>
+                        {d.status}
+                      </Badge>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 

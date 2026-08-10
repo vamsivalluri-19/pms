@@ -57,21 +57,21 @@ const clearDemoData = async () => {
 
     console.log('Creating standard system operator accounts...');
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash('Admin@123', salt);
+    const passwordHash = await bcrypt.hash('Vamsi@1912', salt);
     const managerHash = await bcrypt.hash('Manager@123', salt);
 
     // Recreate Admin User
     const adminUser = await User.create({
-      email: 'admin@placetrack.com',
+      email: 'vamsivalluri52@gmail.com',
       password: passwordHash,
       role: 'ADMIN',
       isVerified: true
     });
     await Admin.create({
       user: adminUser._id,
-      name: 'PlaceTrack Administrator',
-      employeeId: 'ADM-001',
-      permissions: ['ALL']
+      name: 'Vamsi Valluri',
+      phone: '6301231575',
+      address: 'Kandipadu, Guntur (Dt), Andhra Pradesh'
     });
 
     // Recreate Placement Manager User

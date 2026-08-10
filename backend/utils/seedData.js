@@ -56,19 +56,24 @@ const seedDatabase = async () => {
     ]);
 
     console.log('Generating password hashes...');
-    const hashedAdminPassword = bcrypt.hashSync('Admin@123', 10);
+    const hashedAdminPassword = bcrypt.hashSync('Vamsi@1912', 10);
     const hashedManagerPassword = bcrypt.hashSync('Manager@123', 10);
     const hashedRecruiterPassword = bcrypt.hashSync('Recruiter@123', 10);
     const hashedStudentPassword = bcrypt.hashSync('Student@123', 10);
 
     console.log('Creating Administrative users...');
     const adminUser = await User.create({
-      email: 'admin@placetrack.com',
+      email: 'vamsivalluri52@gmail.com',
       password: hashedAdminPassword,
       role: 'ADMIN',
       isVerified: true
     });
-    await Admin.create({ user: adminUser._id, name: 'Root Administrator', phone: '+1234567890' });
+    await Admin.create({
+      user: adminUser._id,
+      name: 'Vamsi Valluri',
+      phone: '6301231575',
+      address: 'Kandipadu, Guntur (Dt), Andhra Pradesh'
+    });
 
     const managerUser = await User.create({
       email: 'manager@placetrack.com',
