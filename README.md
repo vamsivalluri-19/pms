@@ -1,126 +1,158 @@
-# PlaceTrack 🎓
+# PlaceTrack 🎓 
 ### Smart Campus Placement Management Platform
 
-PlaceTrack is a production-grade, highly-secured, responsive MERN-stack web application designed for colleges and universities to manage the complete campus recruitment drive lifecycle. 
+PlaceTrack is a production-grade, highly secure, fully responsive monorepo application designed for colleges and universities to manage the complete campus recruitment drive lifecycle. Featuring real-time signaling, AI integrations, dynamic document verification, and in-platform Google-Meet-style video interview rooms.
 
 ---
 
-## 📁 Folder Structure
+## 🚀 Key Modules & System Features
+
+### 1. 📹 In-Platform Video Interviews (Google Meet Clone)
+No external redirects needed. PlaceTrack hosts real-time video interview rooms directly inside your browser:
+* **WebRTC Peer Streaming**: High-fidelity, direct peer-to-peer audio and video transmission via custom Socket.io room-signaling.
+* **Camera & Screen Share**: Toggle webcam feeds or share screens natively with active track swapping.
+* **Collapsible Meeting Chat**: Real-time broadcast chat panel allowing participants to exchange text feedback during the call.
+* **Interactive AI Simulator**: Toggles a mock recruiter feed with simulated webcam rendering and progressive chat messages—ideal for testing connection streams alone.
+
+### 2. 📝 ATS-Friendly Resume Builder
+A dedicated utility allowing students to compile resumes matching hiring formats:
+* **Overleaf-style LaTeX Templates**: Select from Classic LaTeX (Academic Serif), Modern Tech (Sans-Serif), or Executive Two-Column layouts.
+* **Smart Pre-fill**: Dynamically fetches details directly from student academic standing, skills, and personal information.
+* **Interactive List Editor**: Create and manage customizable rows for education, projects (with repo links), experience, certifications, and achievements.
+* **Live Print-to-PDF**: Renders a live preview frame on-screen and utilizes native browser print overrides to export a 100% text-selectable, ATS-compatible PDF.
+
+### 3. 🤖 Google Gemini AI Core Services
+Integrated via native endpoints (`backend/services/aiService.js`) to provide automated placement assistance:
+* **ATS Resume Analyzer**: Scores formatting, analyzes ATS keywords, and suggests critical missing skills.
+* **AI Coordinator Assistant**: A custom student/recruiter chatbot trained on profiles to answer eligibility questions, write job descriptions, and conduct interactive mock coding practices.
+* **Technical mock Evaluator**: Scores student technical answers for job titles and suggests corrections based on the STAR methodology.
+
+### 4. 🔑 Multi-Role Dashboards & Admin Controls
+* **Admin Portal**: Restricted authorization block. Manage system logins, toggle user status (Active/Suspended), audit department listings, and review audit logs.
+* **Placement Manager**: Approve corporate registrations, audit student marksheets, and schedule campus-wide drives.
+* **Recruiter Dashboard**: Post job descriptions, schedule drives, shortlists applicants, grade scores, and enter live call rooms.
+* **Student Dashboard**: Track active selection stages, Accept/Reject job offer letters, and calculate matching drive eligibility.
+
+---
+
+## 📁 Monorepo Folder Structure
 
 ```
-pod.ai/
-├── package.json         # Root scripts registry
+pms/
+├── package.json               # Root scripts registry
+├── deployment_guide.md        # Step-by-step Render & Vercel deployment guide
 ├── backend/
-│   ├── config/          # db.js connection, jwt.js token helpers
-│   ├── controllers/     # Business logic modules (auth, profile, jobDrive, recruitment, system)
-│   ├── middleware/      # authMiddleware, roleMiddleware, uploadMiddleware, auditMiddleware
-│   ├── models/          # Mongoose database schemas (User, Academic, JobDrive, Recruitment, System)
-│   ├── routes/          # Express route bindings (auth, student, company, jobDrive, recruitment, system)
-│   ├── services/        # Email (Nodemailer), Sockets (Socket.IO), and AI (Google Gemini integrations)
-│   ├── utils/           # Database seed script (seedData.js)
-│   ├── server.js        # Main server entrypoint
+│   ├── config/                # Database connection helper
+│   ├── controllers/           # Auth, Profile, JobDrive, Recruitment, System controllers
+│   ├── middleware/            # Security verification, file uploads, role checking
+│   ├── models/                # User, Academic, JobDrive, Recruitment, System Mongoose schemas
+│   ├── routes/                # Express API endpoint mappings
+│   ├── services/              # Nodemailer transport, Socket.io, Gemini AI services
+│   ├── utils/                 # seedData.js, clearDemoData.js scripts
+│   ├── server.js              # Main Express server entrypoint
 │   └── package.json
 └── frontend/
+    ├── vercel.json            # Vercel SPA routing rewrites
+    ├── vite.config.js         # Vite dev configs and local proxy definitions
     ├── src/
-    │   ├── assets/      # Mockup dashboards graphics
-    │   ├── components/  # Navbars, Sidebars, Topbars, StatCards, UI form inputs
-    │   ├── context/     # AuthContext, NotificationContext with Socket hooks
-    │   ├── layouts/     # DashboardLayout grid wrappers
-    │   ├── pages/       # Home page, Auth screens, dashboards for 4 roles
-    │   ├── routes/      # Protected Route gates
-    │   ├── services/    # Axios client interceptors API client
-    │   ├── index.css    # Tailwind CSS v4 styling tokens
-    │   ├── App.jsx      
-    │   └── main.jsx
-    ├── index.html       Vite wrapper template
-    ├── vite.config.js   Vite config mapping proxies
+    │   ├── assets/            # Mockup layout graphics
+    │   ├── components/        # Sidebar, Header, ResumeTemplates components
+    │   ├── context/           # AuthContext, NotificationContext mappings
+    │   ├── layouts/           # DashboardLayout grid containers
+    │   ├── pages/             # Auth pages, Admin, Company, Student, Manager dashboards
+    │   ├── routes/            # Route guarding middleware
+    │   ├── services/          # Axios interceptors API client
+    │   ├── App.jsx            # Routing configurations
+    │   └── main.jsx           # Vite startup script
     └── package.json
 ```
 
 ---
 
-## ⚡ Local Startup Guide
+## ⚡ Local Setup & Development
 
-Follow these steps to spin up the local server:
+Follow these steps to configure your local development environment:
 
 ### 1. Requirements
-- Make sure a local instance of **MongoDB** is running on your machine (default `mongodb://localhost:27017/placetrack`), or replace the connection string in `backend/.env`.
-- Make sure Node.js (v18+) is installed.
+* Node.js (v18+) and npm installed.
+* Local MongoDB running (`mongodb://localhost:27017/placetrack`) or MongoDB Atlas string configured in `backend/.env`.
 
-### 2. Seeding Database
-Wipe and seed the database with mock records (20 Students, 5 Recruiters, 8 Jobs, 5 Drives, timelines and placement scores) to populate dashboards immediately:
+### 2. Setup Environment Variables
+Create a `.env` file in the `backend/` folder:
+```env
+PORT=5050
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=supersecurejwtaccesssecret
+JWT_REFRESH_SECRET=supersecurejwtrefreshsecret
+GEMINI_API_KEY=your_gemini_api_key
+FRONTEND_URL=http://localhost:3050
+```
+
+### 3. Install Dependencies
+From the root directory, run:
+```bash
+npm run install-all
+```
+
+### 4. Database Seeding & Mock Data
+Clear and populate the database with mock records (20 Students, 5 Recruiters, 8 Jobs, 5 Drives, timelines, and placement scores):
 ```bash
 cd backend
 npm run seed
 ```
 
-### 3. Spin Up Backend
-Start the Express server on port 5050:
-```bash
-cd backend
-npm start
-```
+### 5. Running the Application
+From the root directory, open two terminals and run:
+* **Terminal 1 (Backend)**: `npm run dev-backend` (Starts server on port `5050`)
+* **Terminal 2 (Frontend)**: `npm run dev-frontend` (Starts Vite server on port `3050`)
 
-### 4. Spin Up Frontend
-Start the Vite dev server on port 3050:
-```bash
-cd ../frontend
-npm run dev
-```
 Open [http://localhost:3050](http://localhost:3050) in your web browser.
 
 ---
 
-## 🔑 Demo Login Credentials
+## 🔑 Demo Access Credentials
 
-You can sign in immediately using these seeded mock accounts (all passwords use matching standard format):
+You can sign in immediately using these seeded mock accounts:
 
 | Role | Account Email | Passcode | Description |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin@placetrack.com` | `Admin@123` | Inspects system metrics and audit log lists. |
-| **Placement Manager** | `manager@placetrack.com` | `Manager@123` | Verifies student documents, registers recruiters, and reviews report CSV sheets. |
-| **Recruiter (Microsoft)** | `recruiter@microsoft.com` | `Recruiter@123` | Posts jobs/drives, adds rounds, shortlists, schedules interviews, and grades scores. |
-| **Student** | `student1@placetrack.com` | `Student@123` | Updates profile, uploads resume, evaluates drive eligibility, reviews round progress. |
+| **Admin** | `vamsivalluri52@gmail.com` | `Vamsi@1912` | Restricted admin profile (Vamsi Valluri). Manage accounts, configure departments, audit logs. |
+| **Placement Manager** | `manager@placetrack.com` | `Manager@123` | Verifies marksheet credentials and company approvals. |
+| **Recruiter (Microsoft)** | `recruiter@microsoft.com` | `Recruiter@123` | Posts jobs, schedules drives, grades candidate scores, enters interview rooms. |
+| **Student** | `student1@placetrack.com` | `Student@123` | Uses resume analyzer, builds ATS resumes, reviews eligibility, launches video interviews. |
 
 ---
 
-## 📡 REST API Documentation
+## 📡 REST API Map
 
 All API requests contain header `Authorization: Bearer <accessToken>` once authenticated.
 
-### Authentication Module
-* `POST /api/auth/register` : Create accounts (maps student/recruiter structures).
-* `POST /api/auth/login` : Credentials verification (returns tokens and user info).
-* `POST /api/auth/refresh` : Generates new access token via refresh token caches.
+### Authentication & Recovery
+* `POST /api/auth/register` : Registrations (checks admin email locks).
+* `POST /api/auth/login` : Login credentials mapping.
+* `POST /api/auth/forgot-password` : Sends security token reset email.
+* `POST /api/auth/reset-password/:token` : Resets user password.
 
-### Academic Profiles & Document Audits
-* `GET /api/students` : Returns student list (Manager/Admin only).
-* `GET /api/students/:id` : Fetch candidate profile details.
-* `PUT /api/students/:id` : Edit student academic standing.
-* `POST /api/students/resume` : Uploads PDF resume (saves to local disk storage).
-* `POST /api/students/documents` : Submits marks sheet certificate.
-* `PUT /api/students/:id/documents/verify` : Verified or rejects uploaded files.
+### Student Profiles & Documents
+* `GET /api/students` : Returns student directory.
+* `PUT /api/students/:id` : Edits student profiles.
+* `POST /api/students/resume` : Uploads candidate PDF resume.
+* `POST /api/students/documents` : Submits marksheet for verification.
+* `PUT /api/students/:id/documents/verify` : Approved/Reject document uploads (Managers only).
 
-### Jobs & Drives Configurations
-* `POST /api/jobs` : Recruiter posts a new Job.
-* `GET /api/jobs` : List available job offerings.
-* `POST /api/drives` : Schedule placement drive events.
-* `GET /api/drives/:id` : Evaluates candidate CGPA eligibility engine on the fly.
-* `POST /api/drives/:driveId/rounds` : Constructs dynamic round stages.
-
-### Selections Workflow Progression
-* `POST /api/applications` : Student applies to drive.
-* `GET /api/applications/:id` : Compiles horizontal round status timelines.
-* `POST /api/results` : Grades scores (Passed students promoted to next round).
-* `POST /api/interviews` : Schedules Teams/Zoom interview meetings.
-* `POST /api/placements` : Issues company selection placements and records CTC.
-* `PUT /api/placements/:id` : Student accepts/rejects offer letters.
+### Recruitment & Drives Workflow
+* `POST /api/jobs` : Creates a new job posting.
+* `POST /api/drives` : Schedules a campus recruitment drive.
+* `POST /api/applications` : Applies student to drive (CGPA checker triggers).
+* `POST /api/results` : Grades student round performance.
+* `POST /api/interviews` : Auto-generates local interview room link.
+* `POST /api/placements` : Issues placement selection offers.
 
 ---
 
-## 🤖 Smart AI Core Services
+## 🌐 Production Deployment Summary
 
-AI capabilities are configured in a standalone service file `backend/services/aiService.js`. If no API key is provided, high-fidelity mock results are generated to ensure a seamless dashboard experience:
-1. **ATS Resume Scorecard**: Runs metrics audits, parses project details, and alerts on missing skills tags.
-2. **AI Career Chatbot**: Conversation panel answering personal registration, interview calendar, or preparational questions.
-3. **Mock Interviews Evaluator**: Evaluates student test inputs for specific job descriptions and grades scores out of 100 with STAR methodology hints.
+For full deployment steps, configurations, and environment checklists, please refer to the detailed [deployment_guide.md](file:///c:/Users/VAMSI%20VALLURI/Downloads/pod.ai/deployment_guide.md) in the project directory.
+
+* **Backend**: Hosted on **Render** (Root directory: `backend`).
+* **Frontend**: Hosted on **Vercel** (Root directory: `frontend`).
