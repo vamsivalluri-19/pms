@@ -20,6 +20,7 @@ const Login = () => {
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [newGoogleEmail, setNewGoogleEmail] = useState('');
   const [newGoogleName, setNewGoogleName] = useState('');
+  const [googleBlocked, setGoogleBlocked] = useState(false);
 
   const [onboardRole, setOnboardRole] = useState('STUDENT');
   const [onboardName, setOnboardName] = useState('');
@@ -69,20 +70,32 @@ const Login = () => {
     script.defer = true;
     script.onload = () => {
       if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "235322384394-dvs8ru36if2mj7mf66katvu53e125c0j.apps.googleusercontent.com",
-          callback: handleGoogleCredentialResponse
-        });
-        window.google.accounts.id.renderButton(
-          document.getElementById('google-signin-btn'),
-          { theme: 'outline', size: 'large', width: 320 }
-        );
+        try {
+          window.google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "235322384394-dvs8ru36if2mj7mf66katvu53e125c0j.apps.googleusercontent.com",
+            callback: handleGoogleCredentialResponse
+          });
+          window.google.accounts.id.renderButton(
+            document.getElementById('google-signin-btn'),
+            { theme: 'outline', size: 'large', width: 320 }
+          );
+        } catch (err) {
+          console.error('Google initialization error:', err);
+          setGoogleBlocked(true);
+        }
+      } else {
+        setGoogleBlocked(true);
       }
+    };
+    script.onerror = () => {
+      setGoogleBlocked(true);
     };
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      try {
+        document.body.removeChild(script);
+      } catch (err) {}
     };
   }, []);
 
@@ -306,6 +319,12 @@ const Login = () => {
               Or continue with
             </span>
           </div>
+
+          {googleBlocked && (
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 text-[11px] font-semibold text-center mb-4 leading-normal">
+              ⚠️ Google Sign-In is blocked. Please disable your adblocker, pop-up blocker, or Brave shields on this page, then refresh.
+            </div>
+          )}
 
           <div id="google-signin-btn" className="w-full flex justify-center py-1"></div>
 
