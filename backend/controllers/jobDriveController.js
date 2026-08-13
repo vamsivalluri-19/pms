@@ -1,6 +1,7 @@
 import { Job, Drive, DriveRound } from '../models/JobDrive.js';
-import { Company, Student } from '../models/User.js';
+import { Company, Student, User } from '../models/User.js';
 import { logAuditEvent } from '../middleware/auditMiddleware.js';
+import { createAndSendNotification } from '../services/notificationService.js';
 
 // ==================== JOB CONTROLLERS ====================
 
@@ -264,7 +265,7 @@ export const updateDrive = async (req, res) => {
 
 export const approveDrive = async (req, res) => {
   try {
-    const drive = await Drive.findById(req.params.id);
+    const drive = await Drive.findById(req.params.id).populate('job');
     if (!drive) {
       return res.status(404).json({ success: false, message: 'Drive not found' });
     }
@@ -280,6 +281,35 @@ export const approveDrive = async (req, res) => {
       oldValue: { status: oldStatus },
       newValue: { status: drive.status }
     });
+
+    // Notify company & students if drive is approved
+    if (drive.status === 'Approved') {
+      // 1. Notify recruiter
+      const company = await Company.findById(drive.company);
+      if (company) {
+        await createAndSendNotification({
+          recipientId: company.user,
+          senderId: req.user._id,
+          type: 'DRIVE_APPROVED',
+          title: 'Placement Drive Approved',
+          message: `Your placement drive "${drive.name}" has been approved by the Placement Cell. Students can now view and apply.`,
+          link: `/company/drives`
+        });
+      }
+
+      // 2. Notify all students
+      const students = await Student.find();
+      for (const student of students) {
+        await createAndSendNotification({
+          recipientId: student.user,
+          senderId: req.user._id,
+          type: 'DRIVE_NEW',
+          title: 'New Placement Drive Posted',
+          message: `A new placement drive "${drive.name}" is open for registration. Deadline: ${new Date(drive.registrationEnd).toLocaleDateString()}.`,
+          link: `/student/drives`
+        });
+      }
+    }
 
     return res.json({ success: true, message: `Drive status updated to ${drive.status}`, drive });
   } catch (error) {

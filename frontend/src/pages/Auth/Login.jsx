@@ -1,19 +1,90 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext.jsx';
-import { Button, Input } from '../../components/UI.jsx';
+import { Button, Input, Select } from '../../components/UI.jsx';
 import { GraduationCap, ArrowLeft, ShieldCheck, Cpu, Zap, Briefcase, UserCheck } from 'lucide-react';
 import bgImg from '../../assets/auth_background.png';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
+  const { login, googleAuthLogin, googleAuthRegister } = useContext(AuthContext);
   
   const [role, setRole] = useState('STUDENT');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Google Login and Onboarding States
+  const [googleCredential, setGoogleCredential] = useState('');
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [newGoogleEmail, setNewGoogleEmail] = useState('');
+  const [newGoogleName, setNewGoogleName] = useState('');
+
+  const [onboardRole, setOnboardRole] = useState('STUDENT');
+  const [onboardName, setOnboardName] = useState('');
+  const [onboardStudentId, setOnboardStudentId] = useState('');
+  const [onboardDegree, setOnboardDegree] = useState('B.Tech');
+  const [onboardDepartment, setOnboardDepartment] = useState('CSE');
+  const [onboardCgpa, setOnboardCgpa] = useState('');
+  
+  const [onboardCompanyName, setOnboardCompanyName] = useState('');
+  const [onboardRecruiterName, setOnboardRecruiterName] = useState('');
+  const [onboardRecruiterPhone, setOnboardRecruiterPhone] = useState('');
+
+  const handleGoogleCredentialResponse = async (response) => {
+    setError('');
+    const idToken = response.credential;
+    setGoogleCredential(idToken);
+    
+    setLoading(true);
+    const res = await googleAuthLogin(idToken);
+    setLoading(false);
+
+    if (res.success) {
+      if (res.isNewUser) {
+        setNewGoogleEmail(res.email);
+        setNewGoogleName(res.name);
+        setOnboardName(res.name);
+        setOnboardRecruiterName(res.name);
+        setShowOnboardingModal(true);
+      } else {
+        const roleName = res.role.toLowerCase();
+        if (roleName === 'placement_manager') {
+          navigate('/manager/dashboard');
+        } else {
+          navigate(`/${roleName}/dashboard`);
+        }
+      }
+    } else {
+      setError(res.message || 'Google Sign-In failed');
+    }
+  };
+
+  useEffect(() => {
+    // Load Google Identity Services SDK dynamically
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "235322384394-dvs8ru36if2mj7mf66katvu53e125c0j.apps.googleusercontent.com",
+          callback: handleGoogleCredentialResponse
+        });
+        window.google.accounts.id.renderButton(
+          document.getElementById('google-signin-btn'),
+          { theme: 'outline', size: 'large', width: '100%' }
+        );
+      }
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,14 +100,64 @@ const Login = () => {
     setLoading(false);
 
     if (res.success) {
-      const role = res.role.toLowerCase();
-      if (role === 'placement_manager') {
+      const roleName = res.role.toLowerCase();
+      if (roleName === 'placement_manager') {
         navigate('/manager/dashboard');
       } else {
-        navigate(`/${role}/dashboard`);
+        navigate(`/${roleName}/dashboard`);
       }
     } else {
-      setError(res.message || 'Invalid email or password');
+      if (res.isVerified === false) {
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+      } else {
+        setError(res.message || 'Invalid email or password');
+      }
+    }
+  };
+
+  const handleOnboardSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    let profileData = {};
+    if (onboardRole === 'STUDENT') {
+      profileData = {
+        name: onboardName || newGoogleName,
+        studentId: onboardStudentId,
+        degree: onboardDegree,
+        department: onboardDepartment,
+        cgpa: parseFloat(onboardCgpa) || 0
+      };
+      if (!profileData.studentId || !profileData.cgpa) {
+        setError('Please enter Student ID and CGPA.');
+        return;
+      }
+    } else {
+      profileData = {
+        name: onboardCompanyName,
+        recruiterName: onboardRecruiterName || newGoogleName,
+        recruiterPhone: onboardRecruiterPhone
+      };
+      if (!profileData.name || !profileData.recruiterName) {
+        setError('Please enter Company Name and Recruiter Name.');
+        return;
+      }
+    }
+
+    setLoading(true);
+    const res = await googleAuthRegister(googleCredential, onboardRole, profileData);
+    setLoading(false);
+
+    if (res.success) {
+      setShowOnboardingModal(false);
+      const roleName = res.role.toLowerCase();
+      if (roleName === 'placement_manager') {
+        navigate('/manager/dashboard');
+      } else {
+        navigate(`/${roleName}/dashboard`);
+      }
+    } else {
+      setError(res.message || 'Google registration failed');
     }
   };
 
@@ -47,10 +168,8 @@ const Login = () => {
         className="hidden md:flex md:w-1/2 lg:w-7/12 bg-cover bg-center relative items-center p-16 select-none"
         style={{ backgroundImage: `url(${bgImg})` }}
       >
-        {/* Dark cyber overlay */}
         <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900/90 to-indigo-950/70 backdrop-blur-xs"></div>
         
-        {/* Decorative elements */}
         <div className="absolute top-12 left-12 flex items-center gap-2 z-10 text-white font-bold tracking-tight font-display">
           <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md">
             <GraduationCap size={20} className="text-blue-400" />
@@ -69,7 +188,6 @@ const Login = () => {
             Verify academic credentials, analyze resume indexes with local AI, schedule live interview streams, and track results within a single automated workspace.
           </p>
 
-          {/* Quick list of highlights */}
           <div className="mt-8 flex flex-col gap-4 text-xs font-semibold text-slate-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
@@ -99,9 +217,8 @@ const Login = () => {
       </div>
 
       {/* Right side: Credentials form */}
-      <div className="flex-1 flex items-center justify-center p-8 lg:p-16 bg-white relative z-10">
-        <div className="max-w-md w-full flex flex-col justify-center">
-          {/* Mobile only header branding */}
+      <div className="flex-1 flex items-center justify-center p-8 lg:p-16 bg-white relative z-10 overflow-y-auto max-h-screen">
+        <div className="max-w-md w-full flex flex-col justify-center my-auto">
           <div className="flex md:hidden items-center gap-2 mb-8 text-slate-800 font-bold tracking-tight font-display">
             <div className="p-2 bg-primary-50 rounded-xl text-primary-600">
               <GraduationCap size={20} />
@@ -109,7 +226,6 @@ const Login = () => {
             <span>PlaceTrack Office</span>
           </div>
 
-          {/* Back Home link */}
           <Link to="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 mb-8 transition-colors">
             <ArrowLeft size={14} /> Back to Home
           </Link>
@@ -123,55 +239,26 @@ const Login = () => {
             </div>
           )}
 
-          {/* Visual Cards Selector for Roles */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <div
-              onClick={() => { setRole('STUDENT'); }}
-              className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 ${
-                role === 'STUDENT'
-                  ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
-                  : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
-              }`}
-            >
-              <GraduationCap size={18} className={role === 'STUDENT' ? 'text-primary-500' : 'text-slate-400'} />
-              <span className="text-[10px] font-bold font-display">Student</span>
-            </div>
-
-            <div
-              onClick={() => { setRole('COMPANY'); }}
-              className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 ${
-                role === 'COMPANY'
-                  ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
-                  : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
-              }`}
-            >
-              <Briefcase size={18} className={role === 'COMPANY' ? 'text-primary-500' : 'text-slate-400'} />
-              <span className="text-[10px] font-bold font-display">Recruiter</span>
-            </div>
-
-            <div
-              onClick={() => { setRole('PLACEMENT_MANAGER'); }}
-              className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 ${
-                role === 'PLACEMENT_MANAGER'
-                  ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
-                  : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
-              }`}
-            >
-              <ShieldCheck size={18} className={role === 'PLACEMENT_MANAGER' ? 'text-primary-500' : 'text-slate-400'} />
-              <span className="text-[10px] font-bold font-display">Manager</span>
-            </div>
-
-            <div
-              onClick={() => { setRole('ADMIN'); }}
-              className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 ${
-                role === 'ADMIN'
-                  ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
-                  : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
-              }`}
-            >
-              <UserCheck size={18} className={role === 'ADMIN' ? 'text-primary-500' : 'text-slate-400'} />
-              <span className="text-[10px] font-bold font-display">Admin</span>
-            </div>
+            {['STUDENT', 'COMPANY', 'PLACEMENT_MANAGER', 'ADMIN'].map((roleType) => (
+              <div
+                key={roleType}
+                onClick={() => setRole(roleType)}
+                className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 ${
+                  role === roleType
+                    ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
+                    : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
+                }`}
+              >
+                {roleType === 'STUDENT' && <GraduationCap size={18} className={role === 'STUDENT' ? 'text-primary-500' : 'text-slate-400'} />}
+                {roleType === 'COMPANY' && <Briefcase size={18} className={role === 'COMPANY' ? 'text-primary-500' : 'text-slate-400'} />}
+                {roleType === 'PLACEMENT_MANAGER' && <ShieldCheck size={18} className={role === 'PLACEMENT_MANAGER' ? 'text-primary-500' : 'text-slate-400'} />}
+                {roleType === 'ADMIN' && <UserCheck size={18} className={role === 'ADMIN' ? 'text-primary-500' : 'text-slate-400'} />}
+                <span className="text-[10px] font-bold font-display capitalize">
+                  {roleType.replace('_', ' ').toLowerCase()}
+                </span>
+              </div>
+            ))}
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5 text-xs">
@@ -210,6 +297,18 @@ const Login = () => {
             </Button>
           </form>
 
+          {/* Separator and Google Button */}
+          <div className="relative my-6 text-center text-xs">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-100"></div>
+            </div>
+            <span className="relative bg-white px-4 text-slate-400 font-semibold uppercase tracking-wider text-[9px]">
+              Or continue with
+            </span>
+          </div>
+
+          <div id="google-signin-btn" className="w-full flex justify-center py-1"></div>
+
           <p className="mt-8 text-center text-xs text-slate-400 font-semibold">
             Don't have a workspace?{' '}
             <Link to="/register" className="font-bold text-primary-500 hover:text-primary-600">
@@ -218,9 +317,128 @@ const Login = () => {
           </p>
         </div>
       </div>
+
+      {/* Onboarding Role Dialog Modal */}
+      {showOnboardingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs" onClick={() => setShowOnboardingModal(false)}></div>
+          <div className="relative w-full max-w-lg bg-white rounded-3xl p-8 shadow-2xl flex flex-col z-10 animate-page-enter max-h-[90vh] overflow-y-auto text-xs">
+            <h3 className="text-lg font-bold text-slate-800 font-display mb-1">Onboard Your Account</h3>
+            <p className="text-xs text-slate-400 font-semibold mb-6">Choose your campus role to finalize your Google profile setup.</p>
+            
+            <form onSubmit={handleOnboardSubmit} className="flex flex-col gap-5 text-left">
+              {/* Role Selection */}
+              <div className="grid grid-cols-2 gap-4">
+                <div
+                  onClick={() => setOnboardRole('STUDENT')}
+                  className={`p-4 rounded-2xl border text-center cursor-pointer transition-all ${
+                    onboardRole === 'STUDENT'
+                      ? 'border-primary-500 bg-primary-50/50 text-primary-600 font-bold'
+                      : 'border-slate-200 text-slate-400'
+                  }`}
+                >
+                  <GraduationCap size={22} className="mx-auto mb-1.5" />
+                  <p className="font-display">Student</p>
+                </div>
+                <div
+                  onClick={() => setOnboardRole('COMPANY')}
+                  className={`p-4 rounded-2xl border text-center cursor-pointer transition-all ${
+                    onboardRole === 'COMPANY'
+                      ? 'border-primary-500 bg-primary-50/50 text-primary-600 font-bold'
+                      : 'border-slate-200 text-slate-400'
+                  }`}
+                >
+                  <Briefcase size={20} className="mx-auto mb-2" />
+                  <p className="font-display">Recruiter</p>
+                </div>
+              </div>
+
+              <hr className="border-slate-100 my-2" />
+
+              {/* Student Onboarding Fields */}
+              {onboardRole === 'STUDENT' ? (
+                <div className="flex flex-col gap-4 animate-page-enter">
+                  <Input
+                    label="Full Name"
+                    value={onboardName}
+                    onChange={(e) => setOnboardName(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Student ID / Roll No"
+                    placeholder="e.g. PT-2022005"
+                    value={onboardStudentId}
+                    onChange={(e) => setOnboardStudentId(e.target.value)}
+                    required
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Select
+                      label="Degree"
+                      options={[
+                        { value: 'B.Tech', label: 'B.Tech' },
+                        { value: 'MCA', label: 'MCA' },
+                        { value: 'MBA', label: 'MBA' }
+                      ]}
+                      value={onboardDegree}
+                      onChange={(e) => setOnboardDegree(e.target.value)}
+                    />
+                    <Select
+                      label="Department"
+                      options={[
+                        { value: 'CSE', label: 'Computer Science' },
+                        { value: 'IT', label: 'Information Tech' },
+                        { value: 'ECE', label: 'Electronics' }
+                      ]}
+                      value={onboardDepartment}
+                      onChange={(e) => setOnboardDepartment(e.target.value)}
+                    />
+                  </div>
+                  <Input
+                    label="Current CGPA (0 - 10)"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="10"
+                    placeholder="e.g. 8.45"
+                    value={onboardCgpa}
+                    onChange={(e) => setOnboardCgpa(e.target.value)}
+                    required
+                  />
+                </div>
+              ) : (
+                /* Recruiter Onboarding Fields */
+                <div className="flex flex-col gap-4 animate-page-enter">
+                  <Input
+                    label="Company Name"
+                    placeholder="e.g. Microsoft"
+                    value={onboardCompanyName}
+                    onChange={(e) => setOnboardCompanyName(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Recruiter Name"
+                    value={onboardRecruiterName}
+                    onChange={(e) => setOnboardRecruiterName(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Recruiter Phone"
+                    placeholder="e.g. +91 99887 76655"
+                    value={onboardRecruiterPhone}
+                    onChange={(e) => setOnboardRecruiterPhone(e.target.value)}
+                  />
+                </div>
+              )}
+
+              <Button variant="primary" type="submit" className="w-full mt-4 py-3 shadow-md bg-primary-600 hover:bg-primary-700" disabled={loading}>
+                {loading ? 'Completing onboarding...' : 'Onboard Profile'}
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Login;
-//

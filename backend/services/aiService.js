@@ -1,21 +1,29 @@
 // AI Integration Service
 // Can connect directly to Google Gemini API using native fetch to avoid dependencies.
 
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
-const callGemini = async (prompt, systemInstruction = '', isJson = true) => {
+const callGemini = async (prompt, systemInstruction = '', isJson = true, pdfBase64 = null) => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === 'demo_gemini_key') {
     throw new Error('Gemini API key is not configured');
   }
 
   try {
+    const parts = [{ text: prompt }];
+    if (pdfBase64) {
+      parts.unshift({
+        inlineData: {
+          mimeType: 'application/pdf',
+          data: pdfBase64
+        }
+      });
+    }
+
     const requestBody = {
       contents: [
         {
-          parts: [
-            { text: prompt }
-          ]
+          parts: parts
         }
       ],
       systemInstruction: systemInstruction ? {
@@ -55,8 +63,149 @@ const callGemini = async (prompt, systemInstruction = '', isJson = true) => {
   }
 };
 
-// 1. AI Resume Analyzer
-export const analyzeResume = async (studentProfile) => {
+// A comprehensive local industry-standard skills dataset
+const TECH_SKILLS_DATASET = {
+  frontend: ['react', 'vue', 'angular', 'next.js', 'svelte', 'typescript', 'javascript', 'html5', 'css3', 'tailwindcss', 'bootstrap', 'sass'],
+  backend: ['node.js', 'express.js', 'django', 'flask', 'spring boot', 'nestjs', 'fastapi', 'laravel', 'ruby on rails', 'asp.net', 'golang', 'rust'],
+  databases: ['mongodb', 'postgresql', 'mysql', 'redis', 'sqlite', 'oracle', 'cassandra', 'mariadb', 'firebase', 'elasticsearch', 'dynamodb'],
+  devops: ['docker', 'kubernetes', 'jenkins', 'git', 'github actions', 'gitlab ci', 'terraform', 'ansible', 'prometheus', 'grafana', 'nginx'],
+  cloud: ['aws', 'azure', 'google cloud', 'gcp', 'heroku', 'vercel', 'digitalocean', 'cloudflare'],
+  dataScience: ['python', 'pandas', 'numpy', 'scikit-learn', 'tensorflow', 'pytorch', 'keras', 'r', 'tableau', 'power bi', 'spark', 'hadoop'],
+  coreCs: ['data structures', 'algorithms', 'operating systems', 'computer networks', 'dbms', 'system design', 'oops', 'c++', 'java', 'c#']
+};
+
+const ACTION_VERBS = ['develop', 'design', 'implement', 'optimize', 'scale', 'automate', 'integrate', 'reduce', 'improve', 'build', 'create', 'launch', 'lead', 'manage', 'engineer', 'deploy'];
+
+// 1. AI Resume Analyzer (Enhanced local heuristic model & Gemini fallback)
+export const analyzeResume = async (studentProfile, pdfBase64 = null) => {
+  // A. Local Advanced Heuristic Model
+  let formattingPoints = 0;
+  const suggestions = [];
+  const missingSkills = [];
+
+  // 1. Evaluate Formatting/Links presence
+  if (studentProfile.github) formattingPoints += 10;
+  else suggestions.push('Include a GitHub link to showcase your source code repositories.');
+
+  if (studentProfile.linkedin) formattingPoints += 10;
+  else suggestions.push('Include a LinkedIn profile to showcase your professional network.');
+
+  if (studentProfile.portfolio) formattingPoints += 10;
+  else suggestions.push('Add a personal portfolio link to present live demo links for your web apps.');
+
+  const formattingScore = Math.min(Math.round((formattingPoints / 30) * 100), 100);
+
+  // 2. Evaluate Academic & Core Profile
+  let academicPoints = 0;
+  if (studentProfile.cgpa >= 8.5) academicPoints += 10;
+  else if (studentProfile.cgpa >= 7.5) academicPoints += 7;
+  else academicPoints += 5;
+
+  if (studentProfile.certifications && studentProfile.certifications.length > 0) academicPoints += 5;
+  else suggestions.push('Complete and add industry-relevant certifications (e.g. AWS, Oracle, Google Cloud) to boost ATS score.');
+
+  if (studentProfile.internships && studentProfile.internships.length > 0) academicPoints += 5;
+  else suggestions.push('Seek technical internships or project-based roles to build commercial software experience.');
+
+  // 3. Skills Analysis using our Dataset
+  const userSkills = (studentProfile.skills || []).map(s => s.toLowerCase());
+  let skillsScore = Math.min(userSkills.length * 3, 30); // 10 skills maxes out base score
+
+  // Categorize user skills to identify missing tracks
+  const tracks = {
+    frontend: 0,
+    backend: 0,
+    devops: 0,
+    databases: 0,
+    cloud: 0,
+    coreCs: 0
+  };
+
+  userSkills.forEach(skill => {
+    for (const [track, keywords] of Object.entries(TECH_SKILLS_DATASET)) {
+      if (keywords.includes(skill) || keywords.some(k => skill.includes(k))) {
+        tracks[track]++;
+      }
+    }
+  });
+
+  // Suggest missing foundational tech
+  if (tracks.devops === 0 && tracks.cloud === 0) {
+    missingSkills.push('Docker', 'AWS');
+    suggestions.push('Learn containerization (Docker) and basic cloud services (AWS EC2/S3) for modern deployment skills.');
+  }
+  if (tracks.databases === 0) {
+    missingSkills.push('PostgreSQL', 'MongoDB');
+    suggestions.push('Learn relational and non-relational database management systems (DBMS) such as PostgreSQL or MongoDB.');
+  }
+  if (tracks.frontend === 0) {
+    missingSkills.push('React.js', 'TailwindCSS');
+  }
+  if (tracks.backend === 0) {
+    missingSkills.push('Node.js', 'Express.js');
+  }
+
+  // 4. Project Descriptions Heuristic Analysis (NLP impact scoring)
+  let projectPoints = 0;
+  let actionVerbCount = 0;
+  let metricCount = 0;
+  let descriptionLengthCheck = true;
+
+  if (studentProfile.projects && studentProfile.projects.length > 0) {
+    studentProfile.projects.forEach(project => {
+      const desc = (project.description || '').toLowerCase();
+      if (desc.length < 30) {
+        descriptionLengthCheck = false;
+      }
+      
+      // Match action verbs
+      ACTION_VERBS.forEach(verb => {
+        if (desc.includes(verb)) actionVerbCount++;
+      });
+
+      // Match metrics (numbers, percent, time)
+      if (/\b\d+%\b|\b\d+\s*(ms|kb|mb|sec|users|clients|records|pages)\b|optimized|reduced|increased/i.test(desc)) {
+        metricCount++;
+      }
+    });
+
+    if (actionVerbCount > 0) projectPoints += Math.min(actionVerbCount * 3, 10);
+    else suggestions.push('Start project descriptions with active verbs (e.g. "Developed", "Optimized", "Engineered") instead of passive phrases.');
+
+    if (metricCount > 0) projectPoints += Math.min(metricCount * 5, 10);
+    else suggestions.push('Include quantifiable business metrics in project descriptions (e.g., "reduced latency by 20%", "integrated 5 APIs").');
+
+    if (!descriptionLengthCheck) {
+      suggestions.push('Elaborate on your project descriptions. Provide a clear architectural outline of the project.');
+    }
+  } else {
+    suggestions.push('Add at least two technical projects to showcase your system architecture and coding style.');
+  }
+
+  // Calculate local ATS Compatibility Score
+  // Max possible: formattingPoints (30) + academicPoints (20) + skillsScore (30) + projectPoints (20) = 100
+  const localAtsScore = Math.min(Math.round(formattingPoints + academicPoints + skillsScore + projectPoints), 100);
+  const localScore = Math.round((localAtsScore + formattingScore) / 2);
+
+  let feedback = '';
+  if (localAtsScore >= 80) {
+    feedback = 'Excellent. Your profile has strong formatting, relevant links, solid project descriptions, and key industry technologies. Minor refinements will make it recruitment-ready.';
+  } else if (localAtsScore >= 60) {
+    feedback = 'Good progress. Your profile highlights solid foundational skills, but lacks quantitative metrics in projects and links to personal portfolios or source code repositories.';
+  } else {
+    feedback = 'Needs Improvement. Your profile lacks critical formatting links (GitHub, LinkedIn), core skills, and detailed project outlines. Refine descriptions and complete your profile fields.';
+  }
+
+  const localAnalysis = {
+    score: localScore,
+    atsScore: localAtsScore,
+    formattingScore: formattingScore,
+    suggestions: suggestions.slice(0, 4),
+    missingSkills: missingSkills.slice(0, 3),
+    feedback: feedback
+  };
+
+  // Try calling Gemini for qualitative insights, blend results if successful
   const prompt = `
     Analyze this student profile for resume quality, ATS compatibility, and skills completeness.
     Profile details:
@@ -69,7 +218,11 @@ export const analyzeResume = async (studentProfile) => {
     Internships: ${JSON.stringify(studentProfile.internships)}
     Certifications: ${JSON.stringify(studentProfile.certifications)}
 
-    Return a JSON object with:
+    We have computed local heuristic metrics:
+    Local ATS Score: ${localAtsScore}
+    Local Formatting Score: ${formattingScore}
+
+    Analyze the profile details and return a refined JSON object matching this structure exactly (incorporate both local heuristics and your own advanced analysis):
     {
       "score": number (0-100),
       "atsScore": number (0-100),
@@ -81,25 +234,14 @@ export const analyzeResume = async (studentProfile) => {
   `;
 
   try {
-    return await callGemini(prompt, 'You are an elite ATS resume analyzer and career coach.');
+    const aiResult = await callGemini(prompt, 'You are an elite ATS resume analyzer and career coach.', true, pdfBase64);
+    if (aiResult && typeof aiResult.atsScore === 'number') {
+      return aiResult;
+    }
+    return localAnalysis;
   } catch (error) {
-    // Return high-quality mock evaluation
-    const score = studentProfile.cgpa >= 8 ? 85 : 72;
-    const suggestedSkills = ['Docker', 'AWS', 'System Design', 'CI/CD'].filter(
-      (s) => !studentProfile.skills.includes(s)
-    );
-    return {
-      score: score,
-      atsScore: score - 2,
-      formattingScore: score + 5,
-      suggestions: [
-        'Add more quantitative metrics to internship/project descriptions (e.g. "Optimized latency by 20%").',
-        'Incorporate certifications directly in the education section for higher ATS parsing visibility.',
-        'Detail your contributions inside your Web App project rather than just listing technologies.'
-      ],
-      missingSkills: suggestedSkills.slice(0, 3),
-      feedback: 'Overall, the profile presents a good academic standing. Strengthening backend systems design descriptions and deploying projects live will drastically improve recruitment visibility.'
-    };
+    console.log('Gemini ATS analyzer fallback active. Returning local heuristic metrics.');
+    return localAnalysis;
   }
 };
 

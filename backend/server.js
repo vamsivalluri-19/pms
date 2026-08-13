@@ -1,9 +1,15 @@
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 import express from 'express';
 import http from 'http';
-import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 
 import connectDB from './config/db.js';
@@ -16,12 +22,6 @@ import companyRoutes from './routes/companyRoutes.js';
 import jobDriveRoutes from './routes/jobDriveRoutes.js';
 import recruitmentRoutes from './routes/recruitmentRoutes.js';
 import systemRoutes from './routes/systemRoutes.js';
-
-// Load environment variables
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Connect to Database
 connectDB();

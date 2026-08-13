@@ -81,11 +81,15 @@ const Register = () => {
     setLoading(false);
 
     if (res.success) {
-      const lowerRole = res.role.toLowerCase();
-      if (lowerRole === 'placement_manager') {
-        navigate('/manager/dashboard');
+      if (res.isVerified === false) {
+        navigate(`/verify-email?email=${encodeURIComponent(res.email)}`);
       } else {
-        navigate(`/${lowerRole}/dashboard`);
+        const lowerRole = res.role.toLowerCase();
+        if (lowerRole === 'placement_manager') {
+          navigate('/manager/dashboard');
+        } else {
+          navigate(`/${lowerRole}/dashboard`);
+        }
       }
     } else {
       setError(res.message || 'Registration failed');

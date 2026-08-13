@@ -201,6 +201,11 @@ const StudentDashboard = () => {
 
             {resumeAnalysis ? (
               <div className="mt-6 flex flex-col gap-5">
+                {profile?.resume?.fileName && (
+                  <p className="text-[10px] bg-slate-50 text-slate-500 font-semibold px-3 py-1.5 rounded-lg border border-slate-100 w-fit">
+                    Analyzed: {profile.resume.fileName}
+                  </p>
+                )}
                 <div className="flex items-center justify-around py-2">
                   <div className="text-center">
                     <span className="text-3xl font-black text-slate-800 font-display">{resumeAnalysis.score}</span>
@@ -229,10 +234,27 @@ const StudentDashboard = () => {
                   {analyzing ? 'Recalculating...' : 'Re-Analyze Resume'}
                 </Button>
               </div>
+            ) : !profile?.resume?.fileUrl ? (
+              <div className="mt-6 flex flex-col gap-3">
+                <p className="text-xs text-amber-600 font-semibold flex items-center gap-1.5">
+                  <AlertCircle size={14} /> No resume uploaded yet.
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  Please upload your resume in the Profile section to enable ATS scoring.
+                </p>
+                <Button variant="secondary" size="sm" className="w-full mt-2" onClick={() => window.location.href = '/student/profile'}>
+                  Go to Profile to Upload
+                </Button>
+              </div>
             ) : (
-              <Button variant="primary" size="md" className="w-full mt-6" onClick={handleAnalyzeResume} disabled={analyzing}>
-                {analyzing ? 'Analyzing resume...' : 'Run ATS Evaluation'}
-              </Button>
+              <div className="mt-6 flex flex-col gap-4">
+                <p className="text-[11px] font-semibold text-slate-500">
+                  Active file: <span className="text-primary-600">{profile.resume.fileName}</span>
+                </p>
+                <Button variant="primary" size="md" className="w-full" onClick={handleAnalyzeResume} disabled={analyzing}>
+                  {analyzing ? 'Analyzing resume...' : 'Run ATS Evaluation'}
+                </Button>
+              </div>
             )}
           </div>
 

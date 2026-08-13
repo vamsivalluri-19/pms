@@ -4,6 +4,7 @@ import { Drive, DriveRound } from '../models/JobDrive.js';
 import { logAuditEvent } from '../middleware/auditMiddleware.js';
 import { sendRealTimeNotification } from '../services/socketService.js';
 import { Notification } from '../models/System.js';
+import { createAndSendNotification } from '../services/notificationService.js';
 
 // ==================== APPLICATION CONTROLLERS ====================
 
@@ -72,15 +73,14 @@ export const applyToDrive = async (req, res) => {
     // Create system notification for Recruiter
     const recruiterUser = await Company.findById(drive.company).select('user');
     if (recruiterUser) {
-      const notif = await Notification.create({
-        recipient: recruiterUser.user,
-        sender: req.user._id,
+      await createAndSendNotification({
+        recipientId: recruiterUser.user,
+        senderId: req.user._id,
         type: 'APPLICATION_NEW',
         title: 'New Student Application',
         message: `${student.name} applied for your drive: ${drive.name}`,
         link: `/company/applications`
       });
-      sendRealTimeNotification(recruiterUser.user, notif);
     }
 
     return res.status(201).json({ success: true, message: 'Applied to placement drive successfully', application });
@@ -186,15 +186,14 @@ export const updateApplicationStatus = async (req, res) => {
     // Alert the student
     const studentUser = await Student.findById(application.student._id).select('user');
     if (studentUser) {
-      const notif = await Notification.create({
-        recipient: studentUser.user,
-        sender: req.user._id,
+      await createAndSendNotification({
+        recipientId: studentUser.user,
+        senderId: req.user._id,
         type: 'APPLICATION_STATUS',
         title: 'Application Status Update',
         message: `Your application status has been changed to: ${status}`,
-        link: `/student/applications/${application._id}`
+        link: `/student/applications`
       });
-      sendRealTimeNotification(studentUser.user, notif);
     }
 
     await logAuditEvent(req, {
@@ -257,15 +256,14 @@ export const submitRoundResult = async (req, res) => {
     // 3. Notify student
     const student = await Student.findById(studentId);
     if (student) {
-      const notif = await Notification.create({
-        recipient: student.user,
-        sender: req.user._id,
+      await createAndSendNotification({
+        recipientId: student.user,
+        senderId: req.user._id,
         type: 'ROUND_RESULT',
         title: `Round Result: ${round.roundName}`,
         message: `Your result for ${round.roundName} is published: ${result}. Score: ${score}/${maxScore}`,
         link: `/student/results`
       });
-      sendRealTimeNotification(student.user, notif);
     }
 
     await logAuditEvent(req, {
@@ -314,15 +312,14 @@ export const scheduleInterview = async (req, res) => {
     // Notify student
     const student = await Student.findById(studentId);
     if (student) {
-      const notif = await Notification.create({
-        recipient: student.user,
-        sender: req.user._id,
+      await createAndSendNotification({
+        recipientId: student.user,
+        senderId: req.user._id,
         type: 'INTERVIEW_SCHEDULED',
         title: 'Interview Scheduled',
         message: `You have an interview scheduled on ${new Date(date).toLocaleDateString()} at ${time}. Mode: ${mode}`,
         link: `/student/interviews`
       });
-      sendRealTimeNotification(student.user, notif);
     }
 
     return res.status(201).json({ success: true, message: 'Interview scheduled successfully', interview });
@@ -387,15 +384,14 @@ export const createPlacement = async (req, res) => {
     // 3. Notify student
     const student = await Student.findById(studentId);
     if (student) {
-      const notif = await Notification.create({
-        recipient: student.user,
-        sender: req.user._id,
+      await createAndSendNotification({
+        recipientId: student.user,
+        senderId: req.user._id,
         type: 'PLACEMENT_SELECTED',
         title: 'Congratulations! You are selected!',
         message: `You have received a placement offer from company. Package: ${salaryPackage} LPA. Check details inside your dashboard.`,
         link: `/student/placements`
       });
-      sendRealTimeNotification(student.user, notif);
     }
 
     return res.status(201).json({ success: true, message: 'Placement selection recorded successfully', placement });
@@ -469,15 +465,14 @@ export const uploadOfferLetter = async (req, res) => {
 
     const student = await Student.findById(studentId);
     if (student) {
-      const notif = await Notification.create({
-        recipient: student.user,
-        sender: req.user._id,
+      await createAndSendNotification({
+        recipientId: student.user,
+        senderId: req.user._id,
         type: 'OFFER_LETTER_UPLOADED',
         title: 'Offer Letter Available',
         message: 'Your official placement offer letter has been uploaded. Download and review it.',
         link: `/student/documents`
       });
-      sendRealTimeNotification(student.user, notif);
     }
 
     return res.status(201).json({ success: true, message: 'Offer letter document uploaded', offer });

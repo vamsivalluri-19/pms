@@ -18,12 +18,12 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedExtensions = ['.pdf', '.png', '.jpg', '.jpeg'];
+  const allowedExtensions = ['.pdf', '.png', '.jpg', '.jpeg', '.doc', '.docx'];
   const ext = path.extname(file.originalname).toLowerCase();
   if (allowedExtensions.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only PDF and images (PNG, JPG, JPEG) are allowed.'), false);
+    cb(new Error('Invalid file type. Only PDF, Word Documents, and images are allowed.'), false);
   }
 };
 

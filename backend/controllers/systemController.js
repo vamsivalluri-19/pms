@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { Notification, Message, AuditLog } from '../models/System.js';
 import { Student, Company, User, PlacementManager } from '../models/User.js';
 import { Job, Drive } from '../models/JobDrive.js';
@@ -69,7 +71,33 @@ export const analyzeStudentResume = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Student profile not found' });
     }
 
-    const analysis = await aiService.analyzeResume(student);
+    if (!student.resume || !student.resume.fileUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload your resume PDF or Word file in the Resume tab before running the ATS evaluation.'
+      });
+    }
+
+    // Attempt to locate and load the physical resume file for base64 analysis
+    let pdfBase64 = null;
+    const fileBasename = path.basename(student.resume.fileUrl);
+    const baseDir = process.cwd();
+    
+    let filePath = path.join(baseDir, 'uploads', fileBasename);
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join(baseDir, 'backend', 'uploads', fileBasename);
+    }
+
+    if (fs.existsSync(filePath) && filePath.toLowerCase().endsWith('.pdf')) {
+      try {
+        const fileBuffer = await fs.promises.readFile(filePath);
+        pdfBase64 = fileBuffer.toString('base64');
+      } catch (err) {
+        console.error('Error reading PDF file:', err);
+      }
+    }
+
+    const analysis = await aiService.analyzeResume(student, pdfBase64);
     return res.json({ success: true, analysis });
   } catch (error) {
     console.error(error);

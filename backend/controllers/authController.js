@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import { User, Student, Company, PlacementManager, Admin } from '../models/User.js';
 import { generateAccessToken, generateRefreshToken } from '../config/jwt.js';
 import { sendEmail } from '../services/emailService.js';
@@ -35,11 +36,14 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // 3. Create User
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const user = await User.create({
       email,
       password: hashedPassword,
       role,
-      isVerified: true // Automatically verify for ease of testing
+      isVerified: role === 'ADMIN', // Auto-verify admin
+      otp,
+      otpExpire: Date.now() + 10 * 60 * 1000 // 10 minutes
     });
 
     // 4. Create Role Profile
@@ -94,12 +98,48 @@ export const register = async (req, res) => {
       newValue: { email, role }
     });
 
-    // 6. Generate Tokens
+    // 6. Send Verification Email (if not Admin)
+    if (user.role !== 'ADMIN') {
+      const emailHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <div style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); padding: 30px; text-align: center; color: white;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: 800;">Welcome to PlaceTrack</h1>
+          </div>
+          <div style="padding: 30px; background-color: #ffffff; color: #1e293b; text-align: center;">
+            <h2 style="margin-top: 0; color: #0f172a;">Verify Your Email Address</h2>
+            <p style="font-size: 15px; color: #475569; line-height: 1.5;">Thank you for registering. Please enter the following 6-digit verification code to complete your registration:</p>
+            <div style="margin: 30px 0; font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #4f46e5; background-color: #f1f5f9; padding: 15px 30px; display: inline-block; border-radius: 8px;">
+              ${otp}
+            </div>
+            <p style="font-size: 13px; color: #94a3b8;">This code is valid for 10 minutes. If you did not request this, you can safely ignore this email.</p>
+          </div>
+          <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="margin: 0; font-size: 12px; color: #94a3b8;">This is an automated security code. Please do not reply directly.</p>
+          </div>
+        </div>
+      `;
+
+      await sendEmail({
+        to: user.email,
+        subject: 'PlaceTrack - Verify Your Email Address',
+        html: emailHtml
+      });
+
+      return res.status(201).json({
+        success: true,
+        isVerified: false,
+        message: 'Registration successful! A verification code has been sent to your email.',
+        email: user.email
+      });
+    }
+
+    // 7. Generate Tokens for Admin
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
     return res.status(201).json({
       success: true,
+      isVerified: true,
       accessToken,
       refreshToken,
       user: {
@@ -190,6 +230,46 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    // 2b. Check email verification status
+    if (!user.isVerified) {
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.otp = otp;
+      user.otpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+      await user.save();
+
+      const emailHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <div style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); padding: 30px; text-align: center; color: white;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: 800;">Verify Your Identity</h1>
+          </div>
+          <div style="padding: 30px; background-color: #ffffff; color: #1e293b; text-align: center;">
+            <h2 style="margin-top: 0; color: #0f172a;">Email Verification Required</h2>
+            <p style="font-size: 15px; color: #475569; line-height: 1.5;">To log in, please enter the following 6-digit verification code:</p>
+            <div style="margin: 30px 0; font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #4f46e5; background-color: #f1f5f9; padding: 15px 30px; display: inline-block; border-radius: 8px;">
+              ${otp}
+            </div>
+            <p style="font-size: 13px; color: #94a3b8;">This code is valid for 10 minutes. If you did not request this, you can safely ignore this email.</p>
+          </div>
+          <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="margin: 0; font-size: 12px; color: #94a3b8;">This is an automated security code. Please do not reply directly.</p>
+          </div>
+        </div>
+      `;
+
+      await sendEmail({
+        to: user.email,
+        subject: 'PlaceTrack - Verify Your Identity',
+        html: emailHtml
+      });
+
+      return res.status(403).json({
+        success: false,
+        isVerified: false,
+        message: 'Your email address is not verified yet. A verification code has been sent to your email.',
+        email: user.email
+      });
     }
 
     // 3. Load profile
@@ -380,5 +460,323 @@ export const deleteUser = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Server error deleting user' });
+  }
+};
+
+// @desc    Verify Registration/Login OTP
+// @route   POST /api/auth/verify-otp
+// @access  Public
+export const verifyOTP = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ success: false, message: 'User is already verified' });
+    }
+
+    if (!user.otp || user.otp !== otp) {
+      return res.status(400).json({ success: false, message: 'Invalid verification code' });
+    }
+
+    if (Date.now() > user.otpExpire) {
+      return res.status(400).json({ success: false, message: 'Verification code has expired' });
+    }
+
+    // Verify user
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpire = undefined;
+    await user.save();
+
+    // Fetch profile
+    let profile = null;
+    if (user.role === 'STUDENT') {
+      profile = await Student.findOne({ user: user._id });
+    } else if (user.role === 'COMPANY') {
+      profile = await Company.findOne({ user: user._id });
+    } else if (user.role === 'PLACEMENT_MANAGER') {
+      profile = await PlacementManager.findOne({ user: user._id });
+    } else if (user.role === 'ADMIN') {
+      profile = await Admin.findOne({ user: user._id });
+    }
+
+    // Generate tokens
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    await logAuditEvent(req, {
+      action: 'Verify User OTP',
+      entity: 'User',
+      entityId: user._id.toString(),
+      newValue: { email: user.email, isVerified: true }
+    });
+
+    return res.json({
+      success: true,
+      message: 'Email verified successfully',
+      accessToken,
+      refreshToken,
+      user: {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified
+      },
+      profile
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Server error during OTP verification' });
+  }
+};
+
+// @desc    Resend Verification OTP
+// @route   POST /api/auth/resend-otp
+// @access  Public
+export const resendOTP = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ success: false, message: 'User is already verified' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpire = Date.now() + 10 * 60 * 1000;
+    await user.save();
+
+    const emailHtml = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <div style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); padding: 30px; text-align: center; color: white;">
+          <h1 style="margin: 0; font-size: 24px; font-weight: 800;">Verify Your Email</h1>
+        </div>
+        <div style="padding: 30px; background-color: #ffffff; color: #1e293b; text-align: center;">
+          <h2 style="margin-top: 0; color: #0f172a;">New Verification Code</h2>
+          <p style="font-size: 15px; color: #475569; line-height: 1.5;">Here is your new 6-digit verification code:</p>
+          <div style="margin: 30px 0; font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #4f46e5; background-color: #f1f5f9; padding: 15px 30px; display: inline-block; border-radius: 8px;">
+            ${otp}
+          </div>
+          <p style="font-size: 13px; color: #94a3b8;">This code is valid for 10 minutes.</p>
+        </div>
+        <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+          <p style="margin: 0; font-size: 12px; color: #94a3b8;">This is an automated security code. Please do not reply directly.</p>
+        </div>
+      </div>
+    `;
+
+    await sendEmail({
+      to: user.email,
+      subject: 'PlaceTrack - Verify Your Email Address',
+      html: emailHtml
+    });
+
+    return res.json({ success: true, message: 'Verification code has been resent to your email.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Server error. Failed to resend verification code.' });
+  }
+};
+
+// @desc    Google Sign-In / Authentication
+// @route   POST /api/auth/google
+// @access  Public
+export const googleLogin = async (req, res) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    return res.status(400).json({ success: false, message: 'Google credential ID token is required' });
+  }
+
+  try {
+    // 1. Verify Google ID Token via Google API
+    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+    if (!response.ok) {
+      return res.status(400).json({ success: false, message: 'Invalid Google credential token' });
+    }
+
+    const payload = await response.json();
+    const { email, email_verified, name, picture } = payload;
+
+    if (!email_verified) {
+      return res.status(400).json({ success: false, message: 'Google email is not verified' });
+    }
+
+    // 2. Check if user already exists
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // User does not exist, return a signal for frontend to capture profile info
+      return res.json({
+        success: true,
+        isNewUser: true,
+        email,
+        name
+      });
+    }
+
+    // User exists - log them in!
+    if (!user.isVerified) {
+      user.isVerified = true;
+      await user.save();
+    }
+
+    // Load profile
+    let profile = null;
+    if (user.role === 'STUDENT') {
+      profile = await Student.findOne({ user: user._id });
+    } else if (user.role === 'COMPANY') {
+      profile = await Company.findOne({ user: user._id });
+    } else if (user.role === 'PLACEMENT_MANAGER') {
+      profile = await PlacementManager.findOne({ user: user._id });
+    } else if (user.role === 'ADMIN') {
+      profile = await Admin.findOne({ user: user._id });
+    }
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    await logAuditEvent(req, {
+      action: 'Google Login',
+      entity: 'User',
+      entityId: user._id.toString(),
+      newValue: { email: user.email, role: user.role }
+    });
+
+    return res.json({
+      success: true,
+      isNewUser: false,
+      accessToken,
+      refreshToken,
+      user: {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified
+      },
+      profile
+    });
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    return res.status(500).json({ success: false, message: 'Google login failed due to server error' });
+  }
+};
+
+// @desc    Register a new user via Google Sign-In
+// @route   POST /api/auth/google/register
+// @access  Public
+export const googleRegister = async (req, res) => {
+  const { credential, role, profileData } = req.body;
+
+  if (!credential || !role || !profileData) {
+    return res.status(400).json({ success: false, message: 'Credential token, role, and profile details are required' });
+  }
+
+  try {
+    // 1. Verify Google ID Token
+    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+    if (!response.ok) {
+      return res.status(400).json({ success: false, message: 'Invalid Google credential token' });
+    }
+
+    const payload = await response.json();
+    const { email, email_verified, name } = payload;
+
+    if (!email_verified) {
+      return res.status(400).json({ success: false, message: 'Google email is not verified' });
+    }
+
+    // 2. Check user exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ success: false, message: 'Account already exists with this email address' });
+    }
+
+    // 3. Create User (password-less, generate a secure random string since they log in via Google)
+    const randomPassword = crypto.randomBytes(32).toString('hex');
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(randomPassword, salt);
+
+    const user = await User.create({
+      email,
+      password: hashedPassword,
+      role,
+      isVerified: true // Google email is verified
+    });
+
+    // 4. Create Role Profile
+    let profile = null;
+    if (role === 'STUDENT') {
+      const studentIdExists = await Student.findOne({ studentId: profileData.studentId });
+      if (studentIdExists) {
+        await User.findByIdAndDelete(user._id);
+        return res.status(400).json({ success: false, message: 'Student ID already exists' });
+      }
+      profile = await Student.create({
+        user: user._id,
+        name: profileData.name || name,
+        studentId: profileData.studentId,
+        cgpa: profileData.cgpa || 0,
+        tenthPercentage: profileData.tenthPercentage || 0,
+        twelfthPercentage: profileData.twelfthPercentage || 0,
+        degree: profileData.degree || 'B.Tech',
+        department: profileData.department || 'CSE',
+        batch: profileData.batch || '2022-2026',
+        graduationYear: profileData.graduationYear || 2026
+      });
+    } else if (role === 'COMPANY') {
+      profile = await Company.create({
+        user: user._id,
+        name: profileData.name,
+        recruiterName: profileData.recruiterName || name,
+        recruiterEmail: email,
+        recruiterPhone: profileData.recruiterPhone || '',
+        verificationStatus: 'PENDING'
+      });
+    } else if (role === 'PLACEMENT_MANAGER') {
+      profile = await PlacementManager.create({
+        user: user._id,
+        name: profileData.name || name,
+        department: profileData.department
+      });
+    }
+
+    // 5. Audit Log
+    await logAuditEvent(req, {
+      action: 'Register User via Google',
+      entity: 'User',
+      entityId: user._id.toString(),
+      newValue: { email, role }
+    });
+
+    // 6. Generate Tokens
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    return res.status(201).json({
+      success: true,
+      accessToken,
+      refreshToken,
+      user: {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified
+      },
+      profile
+    });
+  } catch (error) {
+    console.error('Google register error:', error);
+    return res.status(500).json({ success: false, message: 'Google registration failed due to server error' });
   }
 };

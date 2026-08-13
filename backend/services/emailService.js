@@ -2,27 +2,45 @@ import nodemailer from 'nodemailer';
 
 let transporter;
 
-try {
-  transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.mailtrap.io',
-    port: parseInt(process.env.EMAIL_PORT) || 2525,
-    auth: {
-      user: process.env.EMAIL_USER || '',
-      pass: process.env.EMAIL_PASS || ''
+const getTransporter = () => {
+  if (transporter) return transporter;
+
+  try {
+    const host = process.env.EMAIL_HOST || 'smtp.mailtrap.io';
+    const port = parseInt(process.env.EMAIL_PORT) || 2525;
+    const user = process.env.EMAIL_USER || '';
+    const pass = process.env.EMAIL_PASS || '';
+
+    const config = {
+      host,
+      port,
+      auth: { user, pass }
+    };
+
+    // Gmail special configuration
+    if (host === 'smtp.gmail.com') {
+      config.service = 'gmail';
+      delete config.host;
+      delete config.port;
     }
-  });
-} catch (error) {
-  console.error('Nodemailer configuration error:', error);
-}
+
+    transporter = nodemailer.createTransport(config);
+    return transporter;
+  } catch (error) {
+    console.error('Nodemailer configuration error:', error);
+    return null;
+  }
+};
 
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    if (!transporter || !process.env.EMAIL_USER) {
+    const activeTransporter = getTransporter();
+    if (!activeTransporter || !process.env.EMAIL_USER) {
       console.log(`[EMAIL SIMULATION] To: ${to} | Subject: ${subject}`);
       return { success: true, simulated: true };
     }
 
-    const info = await transporter.sendMail({
+    const info = await activeTransporter.sendMail({
       from: `"PlaceTrack" <${process.env.EMAIL_USER}>`,
       to,
       subject,

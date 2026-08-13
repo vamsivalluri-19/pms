@@ -22,6 +22,8 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  otp: String,
+  otpExpire: Date,
   verificationToken: String,
   resetPasswordToken: String,
   resetPasswordExpire: Date

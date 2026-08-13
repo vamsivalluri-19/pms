@@ -81,6 +81,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
       return {
         success: false,
+        isVerified: error.response?.data?.isVerified === false ? false : undefined,
         message: error.response?.data?.message || 'Invalid credentials'
       };
     }
@@ -92,6 +93,10 @@ export const AuthProvider = ({ children }) => {
       const { data } = await api.post('/auth/register', { email, password, role, profileData });
       
       if (data.success) {
+        if (data.isVerified === false) {
+          setLoading(false);
+          return { success: true, isVerified: false, email: data.email };
+        }
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -108,6 +113,97 @@ export const AuthProvider = ({ children }) => {
       return {
         success: false,
         message: error.response?.data?.message || 'Registration failed'
+      };
+    }
+  };
+
+  const googleAuthLogin = async (credential) => {
+    setLoading(true);
+    try {
+      const { data } = await api.post('/auth/google', { credential });
+      if (data.success) {
+        if (data.isNewUser) {
+          setLoading(false);
+          return { success: true, isNewUser: true, email: data.email, name: data.name };
+        }
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        setUser(data.user);
+        setProfile(data.profile);
+        setLoading(false);
+        return { success: true, isNewUser: false, role: data.user.role };
+      }
+      setLoading(false);
+      return { success: false, message: 'Google authentication failed' };
+    } catch (error) {
+      setLoading(false);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Google authentication failed'
+      };
+    }
+  };
+
+  const googleAuthRegister = async (credential, role, profileData) => {
+    setLoading(true);
+    try {
+      const { data } = await api.post('/auth/google/register', { credential, role, profileData });
+      if (data.success) {
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        setUser(data.user);
+        setProfile(data.profile);
+        setLoading(false);
+        return { success: true, role: data.user.role };
+      }
+      setLoading(false);
+      return { success: false, message: 'Google registration failed' };
+    } catch (error) {
+      setLoading(false);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Google registration failed'
+      };
+    }
+  };
+
+  const verifyOTP = async (email, otp) => {
+    setLoading(true);
+    try {
+      const { data } = await api.post('/auth/verify-otp', { email, otp });
+      if (data.success) {
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        setUser(data.user);
+        setProfile(data.profile);
+        setLoading(false);
+        return { success: true, role: data.user.role };
+      }
+      setLoading(false);
+      return { success: false, message: data.message || 'Verification failed' };
+    } catch (error) {
+      setLoading(false);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Verification failed'
+      };
+    }
+  };
+
+  const resendOTP = async (email) => {
+    try {
+      const { data } = await api.post('/auth/resend-otp', { email });
+      return { success: true, message: data.message };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to resend verification code'
       };
     }
   };
@@ -146,7 +242,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, login, register, logout, updateProfile, setProfile, theme, toggleTheme }}>
+    <AuthContext.Provider value={{ user, profile, loading, login, register, logout, updateProfile, setProfile, theme, toggleTheme, verifyOTP, resendOTP, googleAuthLogin, googleAuthRegister }}>
       {children}
     </AuthContext.Provider>
   );
