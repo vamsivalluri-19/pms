@@ -1,3 +1,4 @@
+import https from 'https';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
@@ -555,6 +556,30 @@ export const resendOTP = async (req, res) => {
   }
 };
 
+const getGoogleTokenInfo = (credential) => {
+  return new Promise((resolve, reject) => {
+    https.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`, (res) => {
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(data));
+          } catch (e) {
+            reject(new Error('Failed to parse Google response'));
+          }
+        } else {
+          reject(new Error(`Google API returned status ${res.statusCode}: ${data}`));
+        }
+      });
+    }).on('error', (err) => {
+      reject(err);
+    });
+  });
+};
+
 // @desc    Google Sign-In / Authentication
 // @route   POST /api/auth/google
 // @access  Public
@@ -566,13 +591,15 @@ export const googleLogin = async (req, res) => {
   }
 
   try {
-    // 1. Verify Google ID Token via Google API
-    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
-    if (!response.ok) {
+    // 1. Verify Google ID Token via Google API (using secure native helper)
+    let payload;
+    try {
+      payload = await getGoogleTokenInfo(credential);
+    } catch (err) {
+      console.error('Google token verification error:', err.message);
       return res.status(400).json({ success: false, message: 'Invalid Google credential token' });
     }
 
-    const payload = await response.json();
     const { email, email_verified, name, picture } = payload;
 
     if (!email_verified) {
@@ -650,13 +677,15 @@ export const googleRegister = async (req, res) => {
   }
 
   try {
-    // 1. Verify Google ID Token
-    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
-    if (!response.ok) {
+    // 1. Verify Google ID Token (using secure native helper)
+    let payload;
+    try {
+      payload = await getGoogleTokenInfo(credential);
+    } catch (err) {
+      console.error('Google token registration verification error:', err.message);
       return res.status(400).json({ success: false, message: 'Invalid Google credential token' });
     }
 
-    const payload = await response.json();
     const { email, email_verified, name } = payload;
 
     if (!email_verified) {
