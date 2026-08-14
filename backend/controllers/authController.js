@@ -588,10 +588,18 @@ export const resendOTP = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error. Failed to resend verification code.' });
   }
 };
+let googleCertsCache = null;
+let googleCertsFetchTime = 0;
 
-const getGoogleTokenInfo = (credential) => {
+const getGooglePublicKeys = async () => {
+  const now = Date.now();
+  // Cache Google's public certs for 24 hours to minimize outgoing network requests
+  if (googleCertsCache && (now - googleCertsFetchTime < 24 * 60 * 60 * 1000)) {
+    return googleCertsCache;
+  }
+
   return new Promise((resolve, reject) => {
-    https.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`, (res) => {
+    https.get('https://www.googleapis.com/oauth2/v1/certs', (res) => {
       let data = '';
       res.on('data', (chunk) => {
         data += chunk;
@@ -599,18 +607,48 @@ const getGoogleTokenInfo = (credential) => {
       res.on('end', () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           try {
-            resolve(JSON.parse(data));
+            googleCertsCache = JSON.parse(data);
+            googleCertsFetchTime = Date.now();
+            resolve(googleCertsCache);
           } catch (e) {
-            reject(new Error('Failed to parse Google response'));
+            reject(new Error('Failed to parse Google public certificates'));
           }
         } else {
-          reject(new Error(`Google API returned status ${res.statusCode}: ${data}`));
+          reject(new Error(`Failed to fetch Google certificates, status: ${res.statusCode}`));
         }
       });
     }).on('error', (err) => {
       reject(err);
     });
   });
+};
+
+const getGoogleTokenInfo = async (credential) => {
+  const decoded = jwt.decode(credential, { complete: true });
+  if (!decoded || !decoded.header || !decoded.header.kid) {
+    throw new Error('Invalid Google credential token structure');
+  }
+
+  const kid = decoded.header.kid;
+  const publicKeys = await getGooglePublicKeys();
+  const cert = publicKeys[kid];
+  if (!cert) {
+    throw new Error('Google public key not found for token key identifier');
+  }
+
+  const clientId = process.env.GOOGLE_CLIENT_ID || "235322384394-dvs8ru36if2mj7mf66katvu53e125c0j.apps.googleusercontent.com";
+  const payload = jwt.verify(credential, cert, {
+    algorithms: ['RS256'],
+    audience: clientId,
+    issuer: ['accounts.google.com', 'https://accounts.google.com']
+  });
+
+  // Ensure compatibility with boolean and string representation of email_verified
+  if (payload && payload.email_verified !== undefined) {
+    payload.email_verified = payload.email_verified === true || payload.email_verified === 'true';
+  }
+
+  return payload;
 };
 
 // @desc    Google Sign-In / Authentication
