@@ -8,6 +8,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 import express from 'express';
 import http from 'http';
+import net from 'net';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -36,9 +37,24 @@ initSocket(server);
 app.use(helmet({
   crossOriginResourcePolicy: false // Allows files to be fetched from server on other origins
 }));
+const allowedOrigins = (process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:5173,http://localhost:3050')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const isLocalDevOrigin = (origin) => /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
+
 app.use(cors({
   origin: (origin, callback) => {
-    callback(null, true);
+    // Requests without an Origin header include local scripts and health checks.
+    if (
+      !origin
+      || allowedOrigins.includes(origin)
+      || ((process.env.NODE_ENV || 'development') !== 'production' && isLocalDevOrigin(origin))
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error('Origin is not allowed by CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -90,6 +106,55 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+const MAX_PORT_RETRIES = 10;
+
+const isPortAvailable = (port) => new Promise((resolve) => {
+  const tester = net.createServer();
+
+  tester.once('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      resolve(false);
+      return;
+    }
+    resolve(false);
+  });
+
+  tester.once('listening', () => {
+    tester.close(() => resolve(true));
+  });
+
+  tester.listen(port, '::');
 });
+
+const findAvailablePort = async (startPort, retriesLeft = MAX_PORT_RETRIES) => {
+  let candidatePort = Number(startPort);
+
+  while (retriesLeft >= 0) {
+    // Probe first so the HTTP server only calls listen once.
+    // This avoids duplicate callbacks/events from repeated listen attempts.
+    // eslint-disable-next-line no-await-in-loop
+    const available = await isPortAvailable(candidatePort);
+    if (available) return candidatePort;
+
+    const nextPort = candidatePort + 1;
+    console.warn(`Port ${candidatePort} is in use. Retrying on port ${nextPort}...`);
+    candidatePort = nextPort;
+    retriesLeft -= 1;
+  }
+
+  throw new Error(`No free port found after ${MAX_PORT_RETRIES + 1} attempts starting at ${startPort}`);
+};
+
+const startServer = async (port) => {
+  try {
+    const availablePort = await findAvailablePort(port);
+    server.listen(availablePort, () => {
+      console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${availablePort}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer(PORT);
