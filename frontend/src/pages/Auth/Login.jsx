@@ -5,6 +5,9 @@ import { Button, Input, Select } from '../../components/UI.jsx';
 import { GraduationCap, ArrowLeft, ShieldCheck, Cpu, Zap, Briefcase, UserCheck } from 'lucide-react';
 import bgImg from '../../assets/auth_background.png';
 
+const GOOGLE_SCRIPT_ID = 'placetrack-google-gsi-script';
+const GOOGLE_INIT_CLIENT_KEY = '__placetrackGoogleInitClientId';
+
 const Login = () => {
   const navigate = useNavigate();
   const { login, googleAuthLogin, googleAuthRegister } = useContext(AuthContext);
@@ -84,40 +87,58 @@ const Login = () => {
   }, [googleEnabled]);
 
   const loadGoogleSignIn = (googleClientId) => {
-    // Load Google Identity Services SDK dynamically
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      if (window.google) {
-        try {
+    const initAndRenderButton = () => {
+      if (!window.google?.accounts?.id) {
+        setGoogleBlocked(true);
+        return;
+      }
+
+      try {
+        if (window[GOOGLE_INIT_CLIENT_KEY] !== googleClientId) {
           window.google.accounts.id.initialize({
             client_id: googleClientId,
             callback: handleGoogleCredentialResponse
           });
-          window.google.accounts.id.renderButton(
-            document.getElementById('google-signin-btn'),
-            { theme: 'outline', size: 'large', width: 320 }
-          );
-        } catch (err) {
-          console.error('Google initialization error:', err);
-          setGoogleBlocked(true);
+          window[GOOGLE_INIT_CLIENT_KEY] = googleClientId;
         }
-      } else {
+
+        const buttonContainer = document.getElementById('google-signin-btn');
+        if (!buttonContainer) return;
+        buttonContainer.innerHTML = '';
+        window.google.accounts.id.renderButton(buttonContainer, {
+          theme: 'outline',
+          size: 'large',
+          width: 320
+        });
+      } catch (err) {
+        console.error('Google initialization error:', err);
         setGoogleBlocked(true);
       }
     };
+
+    const existingScript = document.getElementById(GOOGLE_SCRIPT_ID);
+    if (existingScript) {
+      if (window.google?.accounts?.id) {
+        initAndRenderButton();
+      } else {
+        existingScript.addEventListener('load', initAndRenderButton, { once: true });
+      }
+      return undefined;
+    }
+
+    // Load Google Identity Services SDK dynamically once per page.
+    const script = document.createElement('script');
+    script.id = GOOGLE_SCRIPT_ID;
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = initAndRenderButton;
     script.onerror = () => {
       setGoogleBlocked(true);
     };
     document.body.appendChild(script);
 
-    return () => {
-      try {
-        document.body.removeChild(script);
-      } catch (err) {}
-    };
+    return undefined;
   };
 
   const handleSubmit = async (e) => {
@@ -301,6 +322,7 @@ const Login = () => {
               label="Account Email"
               type="email"
               placeholder="e.g. name@placetrack.com"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
@@ -403,6 +425,7 @@ const Login = () => {
                 <div className="flex flex-col gap-4 animate-page-enter">
                   <Input
                     label="Full Name"
+                    autoComplete="name"
                     value={onboardName}
                     onChange={(e) => setOnboardName(e.target.value)}
                     required
@@ -460,6 +483,7 @@ const Login = () => {
                   />
                   <Input
                     label="Recruiter Name"
+                    autoComplete="name"
                     value={onboardRecruiterName}
                     onChange={(e) => setOnboardRecruiterName(e.target.value)}
                     required

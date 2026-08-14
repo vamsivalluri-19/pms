@@ -224,6 +224,7 @@ const Register = () => {
                 label="Email Address"
                 type="email"
                 placeholder="name@placetrack.com"
+                autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
@@ -263,6 +264,7 @@ const Register = () => {
                   <Input
                     label="Full Name"
                     placeholder="e.g. John Doe"
+                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={loading}
@@ -271,6 +273,7 @@ const Register = () => {
                   <Input
                     label="Student ID / Roll No"
                     placeholder="e.g. PT-2022005"
+                    autoComplete="off"
                     value={studentId}
                     onChange={(e) => setStudentId(e.target.value)}
                     disabled={loading}
@@ -305,6 +308,7 @@ const Register = () => {
                     min="0"
                     max="10"
                     placeholder="e.g. 8.45"
+                    autoComplete="off"
                     value={cgpa}
                     onChange={(e) => setCgpa(e.target.value)}
                     disabled={loading}
@@ -320,6 +324,7 @@ const Register = () => {
                   <Input
                     label="Company Name"
                     placeholder="e.g. Microsoft"
+                    autoComplete="organization"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     disabled={loading}
@@ -328,6 +333,7 @@ const Register = () => {
                   <Input
                     label="Recruiter Contact Name"
                     placeholder="Enter contact name"
+                    autoComplete="name"
                     value={recruiterName}
                     onChange={(e) => setRecruiterName(e.target.value)}
                     disabled={loading}
@@ -336,6 +342,7 @@ const Register = () => {
                   <Input
                     label="Recruiter Contact Phone"
                     placeholder="e.g. +91 99887 76655"
+                    autoComplete="tel"
                     value={recruiterPhone}
                     onChange={(e) => setRecruiterPhone(e.target.value)}
                     disabled={loading}
@@ -350,6 +357,7 @@ const Register = () => {
                   <Input
                     label="Full Name"
                     placeholder="e.g. Dr. Rajesh Kumar"
+                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={loading}
@@ -358,6 +366,7 @@ const Register = () => {
                   <Input
                     label="Department / Office"
                     placeholder="e.g. Corporate Relations"
+                    autoComplete="organization-title"
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
                     disabled={loading}
