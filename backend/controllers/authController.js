@@ -124,24 +124,25 @@ export const register = async (req, res) => {
         </div>
       `;
 
-      const registrationEmail = await sendEmail({
+      sendEmail({
         to: user.email,
         subject: 'PlaceTrack - Verify Your Email Address',
         html: emailHtml
-      });
-      if (!registrationEmail.success) {
-        return res.status(201).json({
-          success: true,
-          isVerified: false,
-          email: user.email,
-          message: `Account created! (Warning: Verification email failed to send. For testing/demo purposes, your OTP is: ${otp})`
-        });
-      }
+      }).catch(err => console.error('Registration email background error:', err));
+
+      const isMailUnconfigured = process.env.NODE_ENV !== 'production' || 
+        !process.env.EMAIL_USER || 
+        process.env.EMAIL_USER.includes('your_email') || 
+        process.env.EMAIL_USER.includes('your_smtp');
+
+      const message = isMailUnconfigured 
+        ? `Account created! (For testing/demo, your OTP is: ${otp})` 
+        : 'Registration successful! A verification code has been sent to your email.';
 
       return res.status(201).json({
         success: true,
         isVerified: false,
-        message: 'Registration successful! A verification code has been sent to your email.',
+        message,
         email: user.email
       });
     }
@@ -214,24 +215,25 @@ export const login = async (req, res) => {
         </div>
       `;
 
-      const loginOtpEmail = await sendEmail({
+      sendEmail({
         to: user.email,
         subject: 'PlaceTrack - Verify Your Identity',
         html: emailHtml
-      });
-      if (!loginOtpEmail.success) {
-        return res.status(403).json({
-          success: false,
-          isVerified: false,
-          email: user.email,
-          message: `Your email address is not verified yet. (Warning: Verification email failed to send. For testing/demo purposes, your OTP is: ${otp})`
-        });
-      }
+      }).catch(err => console.error('Login email background error:', err));
+
+      const isMailUnconfigured = process.env.NODE_ENV !== 'production' || 
+        !process.env.EMAIL_USER || 
+        process.env.EMAIL_USER.includes('your_email') || 
+        process.env.EMAIL_USER.includes('your_smtp');
+
+      const message = isMailUnconfigured 
+        ? `Your email address is not verified yet. (For testing/demo, your OTP is: ${otp})` 
+        : 'Your email address is not verified yet. A verification code has been sent to your email.';
 
       return res.status(403).json({
         success: false,
         isVerified: false,
-        message: 'Your email address is not verified yet. A verification code has been sent to your email.',
+        message,
         email: user.email
       });
     }
@@ -323,19 +325,22 @@ export const forgotPassword = async (req, res) => {
       </div>
     `;
 
-    const resetEmail = await sendEmail({
+    sendEmail({
       to: user.email,
       subject: 'PlaceTrack - Password Reset Request',
       html: message
-    });
-    if (!resetEmail.success) {
-      return res.json({
-        success: true,
-        message: `A six-digit verification code has been generated! (Warning: Email failed to send. For testing/demo purposes, your OTP is: ${otp})`
-      });
-    }
+    }).catch(err => console.error('Forgot password email background error:', err));
 
-    return res.json({ success: true, message: 'A six-digit verification code has been sent to your email.' });
+    const isMailUnconfigured = process.env.NODE_ENV !== 'production' || 
+      !process.env.EMAIL_USER || 
+      process.env.EMAIL_USER.includes('your_email') || 
+      process.env.EMAIL_USER.includes('your_smtp');
+
+    const resMessage = isMailUnconfigured 
+      ? `A six-digit verification code has been generated! (For testing/demo, your OTP is: ${otp})` 
+      : 'A six-digit verification code has been sent to your email.';
+
+    return res.json({ success: true, message: resMessage });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Server error. Password reset request failed.' });
@@ -550,19 +555,22 @@ export const resendOTP = async (req, res) => {
       </div>
     `;
 
-    const resendOtpEmail = await sendEmail({
+    sendEmail({
       to: user.email,
       subject: 'PlaceTrack - Verify Your Email Address',
       html: emailHtml
-    });
-    if (!resendOtpEmail.success) {
-      return res.json({
-        success: true,
-        message: `Verification code has been regenerated! (Warning: Email failed to send. For testing/demo purposes, your OTP is: ${otp})`
-      });
-    }
+    }).catch(err => console.error('Resend OTP email background error:', err));
 
-    return res.json({ success: true, message: 'Verification code has been resent to your email.' });
+    const isMailUnconfigured = process.env.NODE_ENV !== 'production' || 
+      !process.env.EMAIL_USER || 
+      process.env.EMAIL_USER.includes('your_email') || 
+      process.env.EMAIL_USER.includes('your_smtp');
+
+    const resMessage = isMailUnconfigured 
+      ? `Verification code has been regenerated! (For testing/demo, your OTP is: ${otp})` 
+      : 'Verification code has been resent to your email.';
+
+    return res.json({ success: true, message: resMessage });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Server error. Failed to resend verification code.' });
