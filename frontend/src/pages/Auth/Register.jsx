@@ -97,7 +97,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row relative overflow-hidden text-left">
+    <div className="auth-shell min-h-screen flex flex-col md:flex-row relative overflow-hidden text-left">
       {/* Left side: Premium branding & graphics */}
       <div
         className="hidden md:flex md:w-1/2 lg:w-5/12 bg-cover bg-center relative items-center p-16 select-none shrink-0"
@@ -154,7 +154,7 @@ const Register = () => {
       </div>
 
       {/* Right side: Fields Forms */}
-      <div className="flex-1 flex items-center justify-center p-8 lg:p-16 bg-white relative z-10 overflow-y-auto max-h-screen">
+      <div className="auth-panel flex-1 flex items-center justify-center p-8 lg:p-16 relative z-10 overflow-y-auto max-h-screen">
         <div className="max-w-lg w-full flex flex-col justify-center my-auto">
           {/* Mobile header */}
           <div className="flex md:hidden items-center gap-2 mb-8 text-slate-800 font-bold tracking-tight font-display">

@@ -109,6 +109,45 @@ body {
 .auth-shell { background: radial-gradient(circle at 98% 4%, rgba(99, 102, 241, .16), transparent 29rem), #f7f9fc; }
 .auth-panel { background: rgba(255,255,255,.85); backdrop-filter: blur(22px); }
 
+/* Ensure auth text/input contrast stays readable in light mode. */
+html:not(.dark) .auth-shell {
+  color: #0f172a;
+}
+
+html:not(.dark) .auth-shell .text-slate-400 {
+  color: #64748b !important;
+}
+
+html:not(.dark) .auth-shell .text-slate-500 {
+  color: #475569 !important;
+}
+
+html:not(.dark) .auth-shell .text-slate-600 {
+  color: #334155 !important;
+}
+
+html:not(.dark) .auth-shell .text-slate-700 {
+  color: #1e293b !important;
+}
+
+html:not(.dark) .auth-shell .text-slate-800 {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .auth-shell input,
+html:not(.dark) .auth-shell select,
+html:not(.dark) .auth-shell textarea {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) .auth-shell input::placeholder,
+html:not(.dark) .auth-shell textarea::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
 /* Role signature headers: these intentionally give each dashboard a different atmosphere. */
 .workspace-hero { min-height: 188px; overflow: hidden; position: relative; border-radius: 26px; padding: 1.65rem; isolation: isolate; box-shadow: 0 22px 48px rgba(15, 23, 42, .16); }
 .workspace-hero-student { background: linear-gradient(120deg, #0c2c6d 0%, #1455cf 53%, #3b82f6 100%); }
@@ -157,6 +196,17 @@ h1, h2, h3, h4, h5, h6 {
 .dark .premium-card { background: rgba(17, 24, 39, .82); border-color: rgba(71, 85, 105, .35); }
 .dark .app-shell main .bg-white.rounded-2xl { border-color: rgba(71, 85, 105, .35); }
 .dark .public-shell, .dark .auth-shell { background: #090d16; }
+
+/* Dashboard navigation needs explicit treatment because it uses translucent surfaces. */
+.dark .app-shell aside { background: rgba(10, 15, 27, .94) !important; border-color: rgba(71, 85, 105, .38) !important; box-shadow: 10px 0 35px rgba(0,0,0,.22) !important; }
+.dark .app-shell header { background: rgba(10, 15, 27, .78) !important; border-color: rgba(71, 85, 105, .34) !important; }
+.dark .app-shell aside [class*="border-slate"] { border-color: rgba(71, 85, 105, .32) !important; }
+.dark .app-shell aside .text-slate-800, .dark .app-shell header .text-slate-800 { color: #f8fafc !important; }
+.dark .app-shell aside .text-slate-400, .dark .app-shell header .text-slate-400 { color: #94a3b8 !important; }
+.dark .app-shell aside a:not(.text-blue-700):not(.text-violet-700):not(.text-teal-700):not(.text-amber-800) { color: #94a3b8 !important; }
+.dark .app-shell aside a:hover { background: rgba(51, 65, 85, .46) !important; color: #f8fafc !important; }
+.dark .app-shell aside .bg-slate-50, .dark .app-shell header .hover\:bg-slate-50:hover, .dark .app-shell header .hover\:bg-slate-100:hover { background: rgba(51, 65, 85, .46) !important; }
+.dark .app-shell .bg-white\/95, .dark .app-shell .bg-white\/70 { background-color: rgba(10, 15, 27, .84) !important; }
 
 .dark .bg-white,
 .dark .bg-slate-50\/50,
