@@ -86,7 +86,8 @@ export const AuthProvider = ({ children }) => {
       return {
         success: false,
         isVerified: error.response?.data?.isVerified === false ? false : undefined,
-        message: error.response?.data?.message || 'Invalid credentials'
+        message: error.response?.data?.message || 'Invalid credentials',
+        debugOtp: error.response?.data?.debugOtp
       };
     }
   };
@@ -99,7 +100,7 @@ export const AuthProvider = ({ children }) => {
       if (data.success) {
         if (data.isVerified === false) {
           setLoading(false);
-          return { success: true, isVerified: false, email: data.email, message: data.message };
+          return { success: true, isVerified: false, email: data.email, message: data.message, debugOtp: data.debugOtp };
         }
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
@@ -207,7 +208,7 @@ export const AuthProvider = ({ children }) => {
   const resendOTP = async (email) => {
     try {
       const { data } = await api.post('/auth/resend-otp', { email });
-      return { success: true, message: data.message };
+      return { success: true, message: data.message, debugOtp: data.debugOtp };
     } catch (error) {
       return {
         success: false,

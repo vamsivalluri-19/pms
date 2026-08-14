@@ -27,7 +27,7 @@ const ForgotPassword = () => {
       const { data } = await api.post('/auth/forgot-password', { email });
       setLoading(false);
       if (data.success) {
-        navigate(`/reset-password?email=${encodeURIComponent(email)}&message=${encodeURIComponent(data.message || '')}`);
+        navigate(`/reset-password?email=${encodeURIComponent(email)}&message=${encodeURIComponent(data.message || '')}&debugOtp=${encodeURIComponent(data.debugOtp || '')}`);
       } else {
         setError(data.message || 'Something went wrong. Please try again.');
       }

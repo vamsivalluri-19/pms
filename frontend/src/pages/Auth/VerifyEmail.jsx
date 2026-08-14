@@ -14,6 +14,7 @@ const VerifyEmail = () => {
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState(searchParams.get('message') || '');
+  const [debugOtp, setDebugOtp] = useState(searchParams.get('debugOtp') || '');
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [countdown, setCountdown] = useState(60);
@@ -72,6 +73,9 @@ const VerifyEmail = () => {
 
     if (res.success) {
       setMessage(res.message || 'A new verification code has been sent to your email.');
+      if (res.debugOtp) {
+        setDebugOtp(res.debugOtp);
+      }
       setCountdown(60);
     } else {
       setError(res.message || 'Failed to resend verification code.');
@@ -202,6 +206,19 @@ const VerifyEmail = () => {
               </button>
             )}
           </div>
+
+          {debugOtp && (
+            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+              <button
+                type="button"
+                onClick={() => alert(`[Developer Mode] Your current OTP code is: ${debugOtp}`)}
+                className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 hover:bg-slate-100 px-3.5 py-1.5 rounded-lg border border-slate-200/60 inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <ShieldCheck size={12} className="text-indigo-500" />
+                Show OTP (Developer Mode)
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

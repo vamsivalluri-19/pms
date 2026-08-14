@@ -163,7 +163,7 @@ const Login = () => {
       }
     } else {
       if (res.isVerified === false) {
-        navigate(`/verify-email?email=${encodeURIComponent(email)}&message=${encodeURIComponent(res.message || '')}`);
+        navigate(`/verify-email?email=${encodeURIComponent(email)}&message=${encodeURIComponent(res.message || '')}&debugOtp=${encodeURIComponent(res.debugOtp || '')}`);
       } else {
         setError(res.message || 'Invalid email or password');
       }

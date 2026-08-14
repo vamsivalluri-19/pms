@@ -82,7 +82,7 @@ const Register = () => {
 
     if (res.success) {
       if (res.isVerified === false) {
-        navigate(`/verify-email?email=${encodeURIComponent(res.email)}&message=${encodeURIComponent(res.message || '')}`);
+        navigate(`/verify-email?email=${encodeURIComponent(res.email)}&message=${encodeURIComponent(res.message || '')}&debugOtp=${encodeURIComponent(res.debugOtp || '')}`);
       } else {
         const lowerRole = res.role.toLowerCase();
         if (lowerRole === 'placement_manager') {

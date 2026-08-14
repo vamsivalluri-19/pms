@@ -143,7 +143,8 @@ export const register = async (req, res) => {
         success: true,
         isVerified: false,
         message,
-        email: user.email
+        email: user.email,
+        debugOtp: otp
       });
     }
 
@@ -234,7 +235,8 @@ export const login = async (req, res) => {
         success: false,
         isVerified: false,
         message,
-        email: user.email
+        email: user.email,
+        debugOtp: otp
       });
     }
 
@@ -340,7 +342,7 @@ export const forgotPassword = async (req, res) => {
       ? `A six-digit verification code has been generated! (For testing/demo, your OTP is: ${otp})` 
       : 'A six-digit verification code has been sent to your email.';
 
-    return res.json({ success: true, message: resMessage });
+    return res.json({ success: true, message: resMessage, debugOtp: otp });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Server error. Password reset request failed.' });
@@ -570,7 +572,7 @@ export const resendOTP = async (req, res) => {
       ? `Verification code has been regenerated! (For testing/demo, your OTP is: ${otp})` 
       : 'Verification code has been resent to your email.';
 
-    return res.json({ success: true, message: resMessage });
+    return res.json({ success: true, message: resMessage, debugOtp: otp });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Server error. Failed to resend verification code.' });

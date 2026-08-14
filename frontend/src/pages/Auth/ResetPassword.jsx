@@ -18,6 +18,7 @@ const ResetPassword = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [infoMessage, setInfoMessage] = useState(searchParams.get('message') || '');
+  const [debugOtp, setDebugOtp] = useState(searchParams.get('debugOtp') || '');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -164,6 +165,19 @@ const ResetPassword = () => {
                   {loading ? 'Updating password...' : 'Update Password'}
                 </Button>
               </form>
+
+              {debugOtp && (
+                <div className="mt-6 pt-6 border-t border-slate-100 text-center animate-page-enter">
+                  <button
+                    type="button"
+                    onClick={() => alert(`[Developer Mode] Your reset OTP code is: ${debugOtp}`)}
+                    className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 hover:bg-slate-100 px-3.5 py-1.5 rounded-lg border border-slate-200/60 inline-flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ShieldCheck size={12} className="text-indigo-500" />
+                    Show OTP (Developer Mode)
+                  </button>
+                </div>
+              )}
             </>
           ) : (
             <div className="text-center flex flex-col items-center gap-4 py-8 animate-page-enter">
