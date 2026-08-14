@@ -11,7 +11,8 @@ import {
   verifyOTP,
   resendOTP,
   googleLogin,
-  googleRegister
+  googleRegister,
+  getAuthProviders
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -19,9 +20,11 @@ import { authorizeRoles } from '../middleware/roleMiddleware.js';
 const router = express.Router();
 
 router.post('/register', register);
+router.get('/providers', getAuthProviders);
 router.post('/login', login);
 router.post('/refresh', refresh);
 router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 router.post('/reset-password/:resetToken', resetPassword);
 router.post('/verify-otp', verifyOTP);
 router.post('/resend-otp', resendOTP);

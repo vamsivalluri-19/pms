@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api.js';
 import { Button, Input } from '../../components/UI.jsx';
 import { GraduationCap, ArrowLeft, ShieldCheck, Cpu, Zap, MailOpen } from 'lucide-react';
 import bgImg from '../../assets/auth_background.png';
 
 const ForgotPassword = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,7 +27,7 @@ const ForgotPassword = () => {
       const { data } = await api.post('/auth/forgot-password', { email });
       setLoading(false);
       if (data.success) {
-        setSuccess(true);
+        navigate(`/reset-password?email=${encodeURIComponent(email)}&message=${encodeURIComponent(data.message || '')}`);
       } else {
         setError(data.message || 'Something went wrong. Please try again.');
       }
@@ -102,7 +103,7 @@ const ForgotPassword = () => {
           {!success ? (
             <>
               <h2 className="text-2xl font-bold text-slate-800 font-display">Forgot Password?</h2>
-              <p className="text-xs text-slate-400 font-semibold mt-1.5 mb-8">No worries. Enter your email and we'll send a reset link.</p>
+              <p className="text-xs text-slate-400 font-semibold mt-1.5 mb-8">No worries. We’ll send a six-digit verification code to your email.</p>
 
               {error && (
                 <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-100 text-xs font-bold text-rose-500 text-center animate-shake">
@@ -122,7 +123,7 @@ const ForgotPassword = () => {
                 />
 
                 <Button variant="primary" type="submit" className="w-full mt-3 py-3 shadow-md bg-primary-600 hover:bg-primary-700" disabled={loading}>
-                  {loading ? 'Sending link...' : 'Send Reset Link'}
+                  {loading ? 'Sending code...' : 'Send Verification Code'}
                 </Button>
               </form>
             </>

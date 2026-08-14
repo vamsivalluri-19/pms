@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }) => {
       if (data.success) {
         if (data.isVerified === false) {
           setLoading(false);
-          return { success: true, isVerified: false, email: data.email };
+          return { success: true, isVerified: false, email: data.email, message: data.message };
         }
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);

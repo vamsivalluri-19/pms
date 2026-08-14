@@ -94,6 +94,7 @@ const studentSchema = new mongoose.Schema({
     remarks: String
   }]
 }, { timestamps: true });
+studentSchema.index({ user: 1 }, { unique: true });
 
 // Company Schema
 const companySchema = new mongoose.Schema({
@@ -120,6 +121,7 @@ const companySchema = new mongoose.Schema({
     default: 'PENDING'
   }
 }, { timestamps: true });
+companySchema.index({ user: 1 }, { unique: true });
 
 // Placement Manager Schema
 const placementManagerSchema = new mongoose.Schema({
@@ -132,6 +134,7 @@ const placementManagerSchema = new mongoose.Schema({
   phone: String,
   department: String
 }, { timestamps: true });
+placementManagerSchema.index({ user: 1 }, { unique: true });
 
 // Admin Schema
 const adminSchema = new mongoose.Schema({
@@ -144,6 +147,7 @@ const adminSchema = new mongoose.Schema({
   phone: String,
   address: String
 }, { timestamps: true });
+adminSchema.index({ user: 1 }, { unique: true });
 
 export const User = mongoose.model('User', userSchema);
 export const Student = mongoose.model('Student', studentSchema);

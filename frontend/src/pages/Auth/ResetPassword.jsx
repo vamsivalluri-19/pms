@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api.js';
 import { Button, Input } from '../../components/UI.jsx';
 import { GraduationCap, ArrowLeft, ShieldCheck, Cpu, Zap, Key } from 'lucide-react';
@@ -7,20 +7,24 @@ import bgImg from '../../assets/auth_background.png';
 
 const ResetPassword = () => {
   const { token } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const email = searchParams.get('email') || '';
 
+  const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [infoMessage, setInfoMessage] = useState(searchParams.get('message') || '');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess(false);
 
-    if (!password || !confirmPassword) {
+    if (!password || !confirmPassword || (!token && (!email || !otp))) {
       setError('Please fill in all fields');
       return;
     }
@@ -32,7 +36,7 @@ const ResetPassword = () => {
 
     setLoading(true);
     try {
-      const { data } = await api.post(`/auth/reset-password/${token}`, { password });
+      const { data } = await api.post(token ? `/auth/reset-password/${token}` : '/auth/reset-password', token ? { password } : { email, otp, password });
       setLoading(false);
       if (data.success) {
         setSuccess(true);
@@ -110,8 +114,14 @@ const ResetPassword = () => {
 
           {!success ? (
             <>
-              <h2 className="text-2xl font-bold text-slate-800 font-display">Create New Password</h2>
-              <p className="text-xs text-slate-400 font-semibold mt-1.5 mb-8">Enter and confirm your new account password below.</p>
+              <h2 className="text-2xl font-bold text-slate-800 font-display">Verify & Reset Password</h2>
+              <p className="text-xs text-slate-400 font-semibold mt-1.5 mb-8">Enter the six-digit code sent to <span className="text-slate-600">{email || 'your email'}</span>, then set a new password.</p>
+
+              {infoMessage && (
+                <div className="mb-6 p-4 rounded-xl bg-blue-50 border border-blue-100 text-xs font-bold text-blue-600 text-center">
+                  {infoMessage}
+                </div>
+              )}
 
               {error && (
                 <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-100 text-xs font-bold text-rose-500 text-center animate-shake">
@@ -120,6 +130,16 @@ const ResetPassword = () => {
               )}
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-5 text-xs">
+                {!token && <Input
+                  label="Six-Digit Verification Code"
+                  inputMode="numeric"
+                  maxLength="6"
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  disabled={loading}
+                  required
+                />}
                 <Input
                   label="New Password"
                   type="password"

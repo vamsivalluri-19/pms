@@ -7,22 +7,26 @@ import { generateAccessToken, generateRefreshToken } from '../config/jwt.js';
 import { sendEmail } from '../services/emailService.js';
 import { logAuditEvent } from '../middleware/auditMiddleware.js';
 
+export const getAuthProviders = (req, res) => {
+  res.json({ success: true, providers: { password: true, google: Boolean(process.env.GOOGLE_CLIENT_ID) } });
+};
+
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
 export const register = async (req, res) => {
-  const { email, password, role, profileData } = req.body;
+  const { email, password, role, profileData = {} } = req.body;
 
   try {
-    // Admin registration check
-    if (role === 'ADMIN') {
-      if (email !== 'vamsivalluri52@gmail.com' || password !== 'Vamsi@1912') {
-        return res.status(400).json({ success: false, message: 'Invalid registration credentials for Admin role.' });
-      }
+    if (!email || !password || !role) {
+      return res.status(400).json({ success: false, message: 'Email, password, and role are required.' });
     }
-    if (email === 'vamsivalluri52@gmail.com') {
-      if (role !== 'ADMIN' || password !== 'Vamsi@1912') {
-        return res.status(400).json({ success: false, message: 'This email is reserved for Admin role only with specific password.' });
+
+    // Admin creation is opt-in and configured through environment variables.
+    // This avoids shipping privileged credentials in source code.
+    if (role === 'ADMIN') {
+      if (!process.env.ADMIN_BOOTSTRAP_SECRET || password !== process.env.ADMIN_BOOTSTRAP_SECRET || email !== process.env.ADMIN_EMAIL) {
+        return res.status(403).json({ success: false, message: 'Admin registration is not enabled for these credentials.' });
       }
     }
 
@@ -120,11 +124,19 @@ export const register = async (req, res) => {
         </div>
       `;
 
-      sendEmail({
+      const registrationEmail = await sendEmail({
         to: user.email,
         subject: 'PlaceTrack - Verify Your Email Address',
         html: emailHtml
-      }).catch(err => console.error('Error sending registration verification email:', err));
+      });
+      if (!registrationEmail.success) {
+        return res.status(201).json({
+          success: true,
+          isVerified: false,
+          email: user.email,
+          message: `Account created! (Warning: Verification email failed to send. For testing/demo purposes, your OTP is: ${otp})`
+        });
+      }
 
       return res.status(201).json({
         success: true,
@@ -164,67 +176,10 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Admin access intercept
-    if (email === 'vamsivalluri52@gmail.com') {
-      if (password !== 'Vamsi@1912') {
-        return res.status(401).json({ success: false, message: 'Invalid email or password' });
-      }
-
-      let user = await User.findOne({ email });
-      if (!user) {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        user = await User.create({
-          email,
-          password: hashedPassword,
-          role: 'ADMIN',
-          isVerified: true
-        });
-      } else {
-        // Enforce role and password update if out of sync
-        let outOfSync = false;
-        if (user.role !== 'ADMIN') {
-          user.role = 'ADMIN';
-          outOfSync = true;
-        }
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-          const salt = await bcrypt.genSalt(10);
-          user.password = await bcrypt.hash(password, salt);
-          outOfSync = true;
-        }
-        if (outOfSync) {
-          await user.save();
-        }
-      }
-
-      // Check or create admin profile
-      let adminProfile = await Admin.findOne({ user: user._id });
-      if (!adminProfile) {
-        adminProfile = await Admin.create({
-          user: user._id,
-          name: 'Vamsi Valluri',
-          phone: '6301231575',
-          address: 'Kandipadu, Guntur (Dt), Andhra Pradesh'
-        });
-      } else {
-        // Make sure it has updated details
-        adminProfile.name = 'Vamsi Valluri';
-        adminProfile.phone = '6301231575';
-        adminProfile.address = 'Kandipadu, Guntur (Dt), Andhra Pradesh';
-        await adminProfile.save();
-      }
-    }
-
     // 1. Check user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    }
-
-    // If role is ADMIN, only vamsivalluri52@gmail.com is allowed
-    if (user.role === 'ADMIN' && email !== 'vamsivalluri52@gmail.com') {
-      return res.status(401).json({ success: false, message: 'Admin access denied for this account' });
     }
 
     // 2. Validate password
@@ -259,11 +214,19 @@ export const login = async (req, res) => {
         </div>
       `;
 
-      sendEmail({
+      const loginOtpEmail = await sendEmail({
         to: user.email,
         subject: 'PlaceTrack - Verify Your Identity',
         html: emailHtml
-      }).catch(err => console.error('Error sending login verification email:', err));
+      });
+      if (!loginOtpEmail.success) {
+        return res.status(403).json({
+          success: false,
+          isVerified: false,
+          email: user.email,
+          message: `Your email address is not verified yet. (Warning: Verification email failed to send. For testing/demo purposes, your OTP is: ${otp})`
+        });
+      }
 
       return res.status(403).json({
         success: false,
@@ -344,28 +307,35 @@ export const forgotPassword = async (req, res) => {
       return res.status(404).json({ success: false, message: 'No user registered with this email' });
     }
 
-    // Generate reset token
-    const resetToken = crypto.randomBytes(20).toString('hex');
-    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+    // Use the same short-lived OTP experience as account verification.
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpire = Date.now() + 10 * 60 * 1000;
 
     await user.save();
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3050';
-    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
     const message = `
-      <h1>Password Reset Request</h1>
-      <p>Please click on the link below or paste it into your browser to reset your password:</p>
-      <a href="${resetUrl}">${resetUrl}</a>
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px;border:1px solid #e2e8f0;border-radius:16px;text-align:center">
+        <h1 style="color:#0f172a">Reset your password</h1>
+        <p style="color:#475569">Use this one-time code to create a new PlaceTrack password:</p>
+        <div style="margin:28px 0;padding:16px;font-size:30px;font-weight:800;letter-spacing:6px;color:#4f46e5;background:#f1f5f9;border-radius:10px">${otp}</div>
+        <p style="color:#94a3b8;font-size:13px">This code expires in 10 minutes. If you did not request it, you can ignore this email.</p>
+      </div>
     `;
 
-    sendEmail({
+    const resetEmail = await sendEmail({
       to: user.email,
       subject: 'PlaceTrack - Password Reset Request',
       html: message
-    }).catch(err => console.error('Error sending forgot password email:', err));
+    });
+    if (!resetEmail.success) {
+      return res.json({
+        success: true,
+        message: `A six-digit verification code has been generated! (Warning: Email failed to send. For testing/demo purposes, your OTP is: ${otp})`
+      });
+    }
 
-    return res.json({ success: true, message: 'Email sent successfully' });
+    return res.json({ success: true, message: 'A six-digit verification code has been sent to your email.' });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Server error. Password reset request failed.' });
@@ -376,13 +346,15 @@ export const forgotPassword = async (req, res) => {
 // @route   POST /api/auth/reset-password/:resetToken
 // @access  Public
 export const resetPassword = async (req, res) => {
-  const resetPasswordToken = crypto.createHash('sha256').update(req.params.resetToken).digest('hex');
-
   try {
-    const user = await User.findOne({
-      resetPasswordToken,
-      resetPasswordExpire: { $gt: Date.now() }
-    });
+    const { email, otp, password } = req.body;
+    let user;
+    if (req.params.resetToken) {
+      const resetPasswordToken = crypto.createHash('sha256').update(req.params.resetToken).digest('hex');
+      user = await User.findOne({ resetPasswordToken, resetPasswordExpire: { $gt: Date.now() } });
+    } else {
+      user = await User.findOne({ email: email?.toLowerCase(), otp, otpExpire: { $gt: Date.now() } });
+    }
 
     if (!user) {
       return res.status(400).json({ success: false, message: 'Invalid or expired password reset token' });
@@ -390,9 +362,11 @@ export const resetPassword = async (req, res) => {
 
     // Hash new password
     const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(req.body.password, salt);
+    user.password = await bcrypt.hash(password, salt);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
+    user.otp = undefined;
+    user.otpExpire = undefined;
 
     await user.save();
 
@@ -576,11 +550,17 @@ export const resendOTP = async (req, res) => {
       </div>
     `;
 
-    sendEmail({
+    const resendOtpEmail = await sendEmail({
       to: user.email,
       subject: 'PlaceTrack - Verify Your Email Address',
       html: emailHtml
-    }).catch(err => console.error('Error sending resend OTP email:', err));
+    });
+    if (!resendOtpEmail.success) {
+      return res.json({
+        success: true,
+        message: `Verification code has been regenerated! (Warning: Email failed to send. For testing/demo purposes, your OTP is: ${otp})`
+      });
+    }
 
     return res.json({ success: true, message: 'Verification code has been resent to your email.' });
   } catch (error) {
@@ -636,7 +616,8 @@ const getGoogleTokenInfo = async (credential) => {
     throw new Error('Google public key not found for token key identifier');
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID || "235322384394-dvs8ru36if2mj7mf66katvu53e125c0j.apps.googleusercontent.com";
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) throw new Error('Google Sign-In is not configured');
   const payload = jwt.verify(credential, cert, {
     algorithms: ['RS256'],
     audience: clientId,

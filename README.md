@@ -86,7 +86,14 @@ JWT_SECRET=supersecurejwtaccesssecret
 JWT_REFRESH_SECRET=supersecurejwtrefreshsecret
 GEMINI_API_KEY=your_gemini_api_key
 FRONTEND_URL=http://localhost:3050
+GOOGLE_CLIENT_ID=your_google_oauth_web_client_id.apps.googleusercontent.com
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_gmail_app_password
 ```
+
+Create `frontend/.env` from `frontend/.env.example`. Google Sign-In is optional: when both matching Google client IDs are present, the Google button is enabled. If either value is absent, the secure email/password sign-in stays available without an error.
 
 ### 3. Install Dependencies
 From the root directory, run:

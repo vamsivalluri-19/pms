@@ -2,19 +2,16 @@ import nodemailer from 'nodemailer';
 
 let transporter;
 
-const DEFAULT_HOST = 'smtp.gmail.com';
-const DEFAULT_PORT = 587;
-const DEFAULT_USER = 'vamsivalluri52@gmail.com';
-const DEFAULT_PASS = 'bnzaxuyrkziukbhv';
-
 const getTransporter = () => {
   if (transporter) return transporter;
 
   try {
-    const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || DEFAULT_HOST;
-    const port = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT) || DEFAULT_PORT;
-    const user = process.env.EMAIL_USER || process.env.SMTP_USER || DEFAULT_USER;
-    const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS || DEFAULT_PASS;
+    const host = process.env.EMAIL_HOST || process.env.SMTP_HOST;
+    const port = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT, 10) || 587;
+    const user = process.env.EMAIL_USER || process.env.SMTP_USER;
+    const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+
+    if (!host || !user || !pass) return null;
 
     const config = {
       host,
@@ -40,11 +37,11 @@ const getTransporter = () => {
 export const sendEmail = async ({ to, subject, html }) => {
   try {
     const activeTransporter = getTransporter();
-    const user = process.env.EMAIL_USER || process.env.SMTP_USER || DEFAULT_USER;
+    const user = process.env.EMAIL_USER || process.env.SMTP_USER;
 
     if (!activeTransporter || !user) {
-      console.log(`[EMAIL SIMULATION] To: ${to} | Subject: ${subject}`);
-      return { success: true, simulated: true };
+      console.error('Email service is not configured. Set EMAIL_HOST, EMAIL_USER, and EMAIL_PASS.');
+      return { success: false, error: 'Email service is not configured' };
     }
 
     const info = await activeTransporter.sendMail({

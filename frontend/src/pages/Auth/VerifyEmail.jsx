@@ -13,7 +13,7 @@ const VerifyEmail = () => {
   const email = searchParams.get('email') || '';
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(searchParams.get('message') || '');
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [countdown, setCountdown] = useState(60);
@@ -71,7 +71,7 @@ const VerifyEmail = () => {
     setResending(false);
 
     if (res.success) {
-      setMessage('A new verification code has been sent to your email.');
+      setMessage(res.message || 'A new verification code has been sent to your email.');
       setCountdown(60);
     } else {
       setError(res.message || 'Failed to resend verification code.');
