@@ -37,23 +37,49 @@ initSocket(server);
 app.use(helmet({
   crossOriginResourcePolicy: false // Allows files to be fetched from server on other origins
 }));
-const allowedOrigins = (process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:5173,http://localhost:3050')
+const isProduction = (process.env.NODE_ENV || 'development') === 'production';
+const defaultDevOrigins = 'http://localhost:5173,http://localhost:3050,http://localhost:3051';
+const configuredOrigins = (process.env.CORS_ORIGIN || process.env.FRONTEND_URL || (isProduction ? '' : defaultDevOrigins))
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+const normalizeOrigin = (origin) => origin.trim().replace(/\/+$/, '');
+const wildcardToRegex = (pattern) => {
+  const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`^${escaped.replace(/\\\*/g, '.*')}$`);
+};
+
+const exactOrigins = new Set();
+const wildcardOrigins = [];
+
+configuredOrigins.forEach((configuredOrigin) => {
+  const normalizedOrigin = normalizeOrigin(configuredOrigin);
+  if (normalizedOrigin.includes('*')) {
+    wildcardOrigins.push(wildcardToRegex(normalizedOrigin));
+  } else {
+    exactOrigins.add(normalizedOrigin);
+  }
+});
+
 const isLocalDevOrigin = (origin) => /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
+const isAllowedOrigin = (origin) => {
+  const normalizedOrigin = normalizeOrigin(origin);
+  if (exactOrigins.has(normalizedOrigin)) return true;
+  return wildcardOrigins.some((pattern) => pattern.test(normalizedOrigin));
+};
 
 app.use(cors({
   origin: (origin, callback) => {
     // Requests without an Origin header include local scripts and health checks.
     if (
       !origin
-      || allowedOrigins.includes(origin)
-      || ((process.env.NODE_ENV || 'development') !== 'production' && isLocalDevOrigin(origin))
+      || isAllowedOrigin(origin)
+      || (!isProduction && isLocalDevOrigin(origin))
     ) {
       return callback(null, true);
     }
+    console.warn(`Blocked CORS origin: ${origin}`);
     return callback(new Error('Origin is not allowed by CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
