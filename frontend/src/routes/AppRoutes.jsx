@@ -36,9 +36,11 @@ import AdminDashboard from '../pages/Admin/Dashboard.jsx';
 
 // Error pages
 import { NotFound, Unauthorized } from '../pages/Errors/ErrorPages.jsx';
+import RouteTransition from '../components/RouteTransition.jsx';
 
 const AppRoutes = () => {
   return (
+    <RouteTransition>
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
@@ -119,6 +121,7 @@ const AppRoutes = () => {
       <Route path="/404" element={<NotFound />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
+    </RouteTransition>
   );
 };
 

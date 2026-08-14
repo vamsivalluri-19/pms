@@ -22,6 +22,15 @@
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+:root {
+  --workspace: #2563eb;
+  --workspace-soft: rgba(37, 99, 235, .12);
+  --workspace-deep: #1e3a8a;
+}
+
+* { -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -58,10 +67,67 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: #f8fafc;
+  background-color: #f4f7fb;
   color: #1e293b;
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Shared product surface: used by dashboards, profiles and management screens. */
+.app-shell {
+  background:
+    radial-gradient(circle at 88% 3%, var(--workspace-soft), transparent 24rem),
+    radial-gradient(circle at 8% 100%, rgba(139, 92, 246, .07), transparent 28rem),
+    #f4f7fb;
+}
+.workspace-student { --workspace: #2563eb; --workspace-deep: #1e3a8a; --workspace-soft: rgba(37, 99, 235, .14); }
+.workspace-company { --workspace: #7c3aed; --workspace-deep: #4c1d95; --workspace-soft: rgba(124, 58, 237, .14); }
+.workspace-manager { --workspace: #0f766e; --workspace-deep: #134e4a; --workspace-soft: rgba(13, 148, 136, .14); }
+.workspace-admin { --workspace: #d97706; --workspace-deep: #92400e; --workspace-soft: rgba(245, 158, 11, .15); }
+
+.premium-card {
+  background: rgba(255, 255, 255, .82);
+  border: 1px solid rgba(226, 232, 240, .82);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, .045);
+  backdrop-filter: blur(14px);
+}
+.premium-card:hover { box-shadow: 0 18px 38px rgba(15, 23, 42, .09); }
+.app-shell main .bg-white.rounded-2xl {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, .045);
+  border-color: rgba(226, 232, 240, .82);
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s ease, border-color .28s ease;
+}
+.app-shell main .bg-white.rounded-2xl:hover { border-color: color-mix(in srgb, var(--workspace) 24%, #e2e8f0); }
+.app-shell main .bg-white.rounded-2xl > h2:first-child,
+.app-shell main .bg-white.rounded-2xl > h3:first-child { letter-spacing: -.02em; }
+.role-glow { position: relative; isolation: isolate; }
+.role-glow::before { content: ''; position: absolute; width: 19rem; height: 19rem; top: -11rem; right: -7rem; background: var(--workspace-soft); filter: blur(20px); border-radius: 999px; z-index: -1; pointer-events: none; }
+.public-shell { background: radial-gradient(circle at 84% 4%, rgba(37, 99, 235, .13), transparent 27rem), radial-gradient(circle at 6% 37%, rgba(124, 58, 237, .08), transparent 23rem), #f7f9fc; }
+.public-shell section { position: relative; }
+.public-shell .bg-white.rounded-2xl { box-shadow: 0 12px 34px rgba(15, 23, 42, .055); transition: transform .32s cubic-bezier(.2,.8,.2,1), box-shadow .32s ease; }
+.public-shell .bg-white.rounded-2xl:hover { transform: translateY(-4px); box-shadow: 0 22px 44px rgba(15, 23, 42, .10); }
+.auth-shell { background: radial-gradient(circle at 98% 4%, rgba(99, 102, 241, .16), transparent 29rem), #f7f9fc; }
+.auth-panel { background: rgba(255,255,255,.85); backdrop-filter: blur(22px); }
+
+/* Role signature headers: these intentionally give each dashboard a different atmosphere. */
+.workspace-hero { min-height: 188px; overflow: hidden; position: relative; border-radius: 26px; padding: 1.65rem; isolation: isolate; box-shadow: 0 22px 48px rgba(15, 23, 42, .16); }
+.workspace-hero-student { background: linear-gradient(120deg, #0c2c6d 0%, #1455cf 53%, #3b82f6 100%); }
+.workspace-hero-company { background: linear-gradient(120deg, #25104e 0%, #6d28d9 53%, #c026d3 100%); }
+.workspace-hero-manager { background: linear-gradient(120deg, #063d3a 0%, #0f766e 54%, #14b8a6 100%); }
+.workspace-hero-admin { background: linear-gradient(120deg, #2f1d08 0%, #9a5c08 52%, #f59e0b 100%); }
+.workspace-hero::after { content: ''; position: absolute; inset: 0; z-index: -1; opacity: .36; background: linear-gradient(110deg, transparent 42%, rgba(255,255,255,.19) 42.3%, transparent 42.7%), linear-gradient(130deg, transparent 65%, rgba(255,255,255,.12) 65.3%, transparent 65.7%); background-size: 88px 88px; }
+.workspace-hero-grid { position: absolute; inset: 0; z-index: -1; opacity: .15; background-image: linear-gradient(rgba(255,255,255,.42) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.42) 1px, transparent 1px); background-size: 30px 30px; mask-image: linear-gradient(to left, black, transparent 73%); }
+.workspace-hero-orb { position: absolute; z-index: -1; border-radius: 100%; filter: blur(1px); background: rgba(255,255,255,.14); animation: float-orb 8s ease-in-out infinite; }
+.workspace-hero-orb-one { width: 18rem; height: 18rem; right: -5rem; top: -11rem; }
+.workspace-hero-orb-two { width: 8rem; height: 8rem; right: 22%; bottom: -5rem; background: rgba(255,255,255,.1); animation-delay: -3s; }
+.workspace-hero-tag, .workspace-hero-page { display: inline-flex; align-items: center; gap: .48rem; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.12); box-shadow: inset 0 1px rgba(255,255,255,.16); backdrop-filter: blur(12px); border-radius: 999px; padding: .55rem .75rem; color: white; font-size: 10px; font-weight: 800; letter-spacing: .035em; white-space: nowrap; }
+.workspace-hero-page { color: rgba(255,255,255,.8); background: rgba(2,6,23,.16); }
+@keyframes float-orb { 50% { transform: translate3d(-12px, 12px, 0) scale(1.06); } }
+.page-reveal { animation: page-reveal .46s cubic-bezier(.2,.8,.2,1) both; }
+.stagger-in { animation: page-reveal .5s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes page-reveal { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -86,6 +152,11 @@ h1, h2, h3, h4, h5, h6 {
   background-color: #090d16 !important;
   color: #f9fafb !important;
 }
+
+.dark .app-shell { background: radial-gradient(circle at 85% 0%, var(--workspace-soft), transparent 28rem), #090d16; }
+.dark .premium-card { background: rgba(17, 24, 39, .82); border-color: rgba(71, 85, 105, .35); }
+.dark .app-shell main .bg-white.rounded-2xl { border-color: rgba(71, 85, 105, .35); }
+.dark .public-shell, .dark .auth-shell { background: #090d16; }
 
 .dark .bg-white,
 .dark .bg-slate-50\/50,

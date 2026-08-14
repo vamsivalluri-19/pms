@@ -2,10 +2,10 @@ import React from 'react';
 
 // Modern Premium Button
 export const Button = ({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
-  const baseStyle = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyle = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 cursor-pointer active:scale-[.98] hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0';
   
   const variants = {
-    primary: 'bg-primary-500 hover:bg-primary-600 text-white shadow-lg shadow-blue-500/15 focus:ring-2 focus:ring-primary-500/30',
+    primary: 'bg-primary-500 hover:bg-primary-600 text-white shadow-lg shadow-blue-500/20 focus:ring-2 focus:ring-primary-500/30',
     secondary: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm focus:ring-2 focus:ring-slate-100',
     danger: 'bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/15 focus:ring-2 focus:ring-rose-500/30',
     ghost: 'text-slate-600 hover:bg-slate-50'
@@ -91,7 +91,7 @@ export const LoadingSpinner = () => (
 
 // Empty State View
 export const EmptyState = ({ title = 'No Data Found', message = 'There are no items matching this criteria right now.' }) => (
-  <div className="w-full py-12 px-6 flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-slate-100 shadow-xs">
+  <div className="premium-card w-full py-12 px-6 flex flex-col items-center justify-center text-center rounded-2xl">
     <p className="text-base font-bold text-slate-800 font-display">{title}</p>
     <p className="mt-1 text-sm text-slate-500 max-w-sm">{message}</p>
   </div>

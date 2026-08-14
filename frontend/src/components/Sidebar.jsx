@@ -27,6 +27,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   if (!user) return null;
 
   const role = user.role;
+  const roleMeta = {
+    STUDENT: { label: 'Candidate space', accent: 'from-blue-600 to-indigo-600', active: 'bg-blue-500/15 text-blue-700 ring-1 ring-blue-500/10' },
+    COMPANY: { label: 'Recruiter studio', accent: 'from-violet-600 to-fuchsia-600', active: 'bg-violet-500/15 text-violet-700 ring-1 ring-violet-500/10' },
+    PLACEMENT_MANAGER: { label: 'Operations desk', accent: 'from-teal-600 to-emerald-600', active: 'bg-teal-500/15 text-teal-700 ring-1 ring-teal-500/10' },
+    ADMIN: { label: 'Control centre', accent: 'from-amber-500 to-orange-600', active: 'bg-amber-500/15 text-amber-800 ring-1 ring-amber-500/10' }
+  }[role] || { label: 'Workspace', accent: 'from-blue-600 to-indigo-600', active: 'bg-blue-500/15 text-blue-700' };
 
   const getMenuOptions = () => {
     switch (role) {
@@ -86,8 +92,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }
   };
 
-  const activeStyle = 'flex items-center gap-3.5 px-4 py-3 rounded-xl bg-blue-50 text-blue-600 font-bold transition-all duration-200 border-l-4 border-blue-500 rounded-l-none shadow-xs';
-  const inactiveStyle = 'flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-700 font-medium transition-all duration-200';
+  const activeStyle = `flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold transition-all duration-200 shadow-sm ${roleMeta.active}`;
+  const inactiveStyle = 'flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-700 hover:translate-x-0.5 font-medium transition-all duration-200';
 
   return (
     <>
@@ -101,19 +107,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
       {/* Sidebar scaffolding */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-white border-r border-slate-100 transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-white/95 backdrop-blur-xl border-r border-slate-200/70 shadow-[10px_0_35px_rgba(15,23,42,.04)] transition-transform duration-300 lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Header Branding */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/10">
+            <div className={`p-2 rounded-xl bg-gradient-to-tr ${roleMeta.accent} text-white shadow-md shadow-slate-900/10`}>
               <GraduationCap size={20} />
             </div>
             <div>
               <span className="text-sm font-extrabold text-slate-800 font-display tracking-tight leading-none block">CAMPUS PLACEMENT</span>
-              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mt-0.5">TRACKER</span>
+              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mt-0.5">{roleMeta.label}</span>
             </div>
           </div>
           <button onClick={toggleSidebar} className="text-slate-400 hover:text-slate-600 lg:hidden">
@@ -122,7 +128,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
 
         {/* Dynamic menu items list */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-1">
+        <nav className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-1">
           {getMenuOptions().map((opt) => (
             <NavLink
               key={opt.name}

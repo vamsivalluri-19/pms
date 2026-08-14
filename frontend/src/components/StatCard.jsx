@@ -20,7 +20,7 @@ const StatCard = ({ title, value, icon, description, trend, variant = 'blue' }) 
   };
 
   return (
-    <div className={`p-6 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-between ${borderVariants[variant]}`}>
+    <div className={`premium-card p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 flex items-center justify-between ${borderVariants[variant]}`}>
       <div className="flex-1">
         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider font-display">{title}</p>
         <p className="mt-2 text-2xl font-bold text-slate-800 font-display tracking-tight">{value}</p>

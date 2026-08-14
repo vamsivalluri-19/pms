@@ -79,7 +79,7 @@ const Home = () => {
   const placementRateVal = publicStats && publicStats.totalStudents > 0 ? `${((publicStats.placedStudents / publicStats.totalStudents) * 100).toFixed(1)}%` : 'Growing with every placement';
 
   return (
-    <div className="bg-slate-50 min-h-screen relative overflow-hidden" id="home">
+    <div className="public-shell min-h-screen relative overflow-hidden" id="home">
       <Navbar />
 
       {/* Background Ornaments */}

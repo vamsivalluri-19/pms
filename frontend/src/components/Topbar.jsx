@@ -10,6 +10,7 @@ const Topbar = ({ toggleSidebar }) => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useContext(NotificationContext);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const workspaceName = { STUDENT: 'Career workspace', COMPANY: 'Recruiter studio', PLACEMENT_MANAGER: 'Operations desk', ADMIN: 'System control centre' }[user?.role] || 'Campus Placement Portal';
 
   const getInitials = (name) => {
     if (!name) return 'PT';
@@ -17,7 +18,7 @@ const Topbar = ({ toggleSidebar }) => {
   };
 
   return (
-    <header className="sticky top-0 right-0 z-30 flex items-center justify-between w-full h-16 px-6 bg-white/70 backdrop-blur-md border-b border-slate-100 shadow-xs">
+    <header className="sticky top-0 right-0 z-30 flex items-center justify-between w-full h-[72px] px-4 sm:px-6 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-[0_4px_20px_rgba(15,23,42,.025)]">
       {/* Mobile Toggle & Active Workspace Path */}
       <div className="flex items-center gap-4">
         <button
@@ -27,7 +28,7 @@ const Topbar = ({ toggleSidebar }) => {
           <Menu size={20} />
         </button>
         <div className="hidden sm:block">
-          <p className="text-xs text-slate-400 font-semibold tracking-wider uppercase font-display">Campus Placement Portal</p>
+          <p className="text-[10px] text-slate-400 font-bold tracking-[.14em] uppercase font-display">{workspaceName}</p>
           <p className="text-sm font-bold text-slate-800 font-display capitalize">Welcome, {profile?.name || user?.email.split('@')[0]}</p>
         </div>
       </div>
@@ -118,7 +119,7 @@ const Topbar = ({ toggleSidebar }) => {
             }}
             className="flex items-center gap-3 p-1.5 hover:bg-slate-50 rounded-xl transition-all cursor-pointer"
           >
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-primary-500 to-indigo-600 text-white font-bold flex items-center justify-center shadow-md shadow-blue-500/10 font-display">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-primary-500 to-indigo-600 text-white font-bold flex items-center justify-center shadow-md shadow-blue-500/20 font-display ring-2 ring-white">
               {profile?.photo ? (
                 <img src={getUploadUrl(profile.photo)} alt="Avatar" className="h-full w-full object-cover rounded-xl" />
               ) : (

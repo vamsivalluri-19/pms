@@ -14,6 +14,12 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const roleStyle = {
+    STUDENT: { active: 'border-blue-500 bg-blue-50 text-blue-600 shadow-blue-500/10', icon: 'text-blue-500', label: 'Launch your career' },
+    COMPANY: { active: 'border-violet-500 bg-violet-50 text-violet-600 shadow-violet-500/10', icon: 'text-violet-500', label: 'Build your talent pipeline' },
+    PLACEMENT_MANAGER: { active: 'border-teal-500 bg-teal-50 text-teal-700 shadow-teal-500/10', icon: 'text-teal-600', label: 'Orchestrate campus outcomes' },
+    ADMIN: { active: 'border-amber-500 bg-amber-50 text-amber-700 shadow-amber-500/10', icon: 'text-amber-600', label: 'Secure system administration' }
+  }[role];
 
   // Google Login and Onboarding States
   const [googleCredential, setGoogleCredential] = useState('');
@@ -21,6 +27,7 @@ const Login = () => {
   const [newGoogleEmail, setNewGoogleEmail] = useState('');
   const [newGoogleName, setNewGoogleName] = useState('');
   const [googleBlocked, setGoogleBlocked] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
 
   const [onboardRole, setOnboardRole] = useState('STUDENT');
   const [onboardName, setOnboardName] = useState('');
@@ -63,6 +70,20 @@ const Login = () => {
   };
 
   useEffect(() => {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!googleClientId) return;
+
+    // Render Google whenever the browser client ID is configured. The API still
+    // validates every credential and returns a safe setup error if needed.
+    setGoogleEnabled(true);
+  }, []);
+
+  useEffect(() => {
+    if (!googleEnabled) return undefined;
+    return loadGoogleSignIn(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+  }, [googleEnabled]);
+
+  const loadGoogleSignIn = (googleClientId) => {
     // Load Google Identity Services SDK dynamically
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
@@ -72,7 +93,7 @@ const Login = () => {
       if (window.google) {
         try {
           window.google.accounts.id.initialize({
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "235322384394-dvs8ru36if2mj7mf66katvu53e125c0j.apps.googleusercontent.com",
+            client_id: googleClientId,
             callback: handleGoogleCredentialResponse
           });
           window.google.accounts.id.renderButton(
@@ -97,7 +118,7 @@ const Login = () => {
         document.body.removeChild(script);
       } catch (err) {}
     };
-  }, []);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -175,7 +196,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row relative overflow-hidden text-left">
+    <div className="auth-shell min-h-screen flex flex-col md:flex-row relative overflow-hidden text-left">
       {/* Left side: Premium branding & graphics */}
       <div
         className="hidden md:flex md:w-1/2 lg:w-7/12 bg-cover bg-center relative items-center p-16 select-none"
@@ -230,7 +251,7 @@ const Login = () => {
       </div>
 
       {/* Right side: Credentials form */}
-      <div className="flex-1 flex items-center justify-center p-8 lg:p-16 bg-white relative z-10 overflow-y-auto max-h-screen">
+      <div className="auth-panel flex-1 flex items-center justify-center p-8 lg:p-16 relative z-10 overflow-y-auto max-h-screen">
         <div className="max-w-md w-full flex flex-col justify-center my-auto">
           <div className="flex md:hidden items-center gap-2 mb-8 text-slate-800 font-bold tracking-tight font-display">
             <div className="p-2 bg-primary-50 rounded-xl text-primary-600">
@@ -244,7 +265,8 @@ const Login = () => {
           </Link>
 
           <h2 className="text-2xl font-bold text-slate-800 font-display">Secure Sign In</h2>
-          <p className="text-xs text-slate-400 font-semibold mt-1.5 mb-8">Access the Smart Campus Placement Management Platform</p>
+          <p className="text-xs text-slate-400 font-semibold mt-1.5">Access the Smart Campus Placement Management Platform</p>
+          <p className={`text-[11px] font-bold mt-2 mb-8 ${roleStyle.icon}`}>{roleStyle.label}</p>
 
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-100 text-xs font-bold text-rose-500 text-center animate-shake">
@@ -259,14 +281,14 @@ const Login = () => {
                 onClick={() => setRole(roleType)}
                 className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 ${
                   role === roleType
-                    ? 'border-primary-500 bg-primary-50/50 shadow-sm text-primary-600'
+                    ? `${roleStyle.active} shadow-lg`
                     : 'border-slate-200 hover:border-slate-300 text-slate-400 bg-white/30'
                 }`}
               >
-                {roleType === 'STUDENT' && <GraduationCap size={18} className={role === 'STUDENT' ? 'text-primary-500' : 'text-slate-400'} />}
-                {roleType === 'COMPANY' && <Briefcase size={18} className={role === 'COMPANY' ? 'text-primary-500' : 'text-slate-400'} />}
-                {roleType === 'PLACEMENT_MANAGER' && <ShieldCheck size={18} className={role === 'PLACEMENT_MANAGER' ? 'text-primary-500' : 'text-slate-400'} />}
-                {roleType === 'ADMIN' && <UserCheck size={18} className={role === 'ADMIN' ? 'text-primary-500' : 'text-slate-400'} />}
+                {roleType === 'STUDENT' && <GraduationCap size={18} className={role === 'STUDENT' ? roleStyle.icon : 'text-slate-400'} />}
+                {roleType === 'COMPANY' && <Briefcase size={18} className={role === 'COMPANY' ? roleStyle.icon : 'text-slate-400'} />}
+                {roleType === 'PLACEMENT_MANAGER' && <ShieldCheck size={18} className={role === 'PLACEMENT_MANAGER' ? roleStyle.icon : 'text-slate-400'} />}
+                {roleType === 'ADMIN' && <UserCheck size={18} className={role === 'ADMIN' ? roleStyle.icon : 'text-slate-400'} />}
                 <span className="text-[10px] font-bold font-display capitalize">
                   {roleType.replace('_', ' ').toLowerCase()}
                 </span>
@@ -311,8 +333,8 @@ const Login = () => {
             </Button>
           </form>
 
-          {/* Separator and Google Button */}
-          <div className="relative my-6 text-center text-xs">
+          {/* Google is only displayed when matching frontend and backend credentials are configured. */}
+          {googleEnabled && <><div className="relative my-6 text-center text-xs">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-100"></div>
             </div>
@@ -328,6 +350,7 @@ const Login = () => {
           )}
 
           <div id="google-signin-btn" className="w-full flex justify-center py-1"></div>
+          </>}
 
           <p className="mt-8 text-center text-xs text-slate-400 font-semibold">
             Don't have a workspace?{' '}

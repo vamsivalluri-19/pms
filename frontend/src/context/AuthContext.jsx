@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const storedUser = localStorage.getItem('user');
+      const storedProfile = localStorage.getItem('profile');
       const token = localStorage.getItem('accessToken');
       
       if (storedUser && token) {
@@ -46,8 +47,10 @@ export const AuthProvider = ({ children }) => {
           } else if (parsedUser.role === 'COMPANY') {
             res = await api.get(`/companies/me`);
             setProfile(res.data.company || null);
+          } else if (storedProfile) {
+            // Manager and admin profiles are returned at login; retain the real identity on refresh.
+            setProfile(JSON.parse(storedProfile));
           } else {
-            // Placement Manager / Admin profile
             setProfile({ name: parsedUser.role === 'ADMIN' ? 'Administrator' : 'Placement Coordinator' });
           }
         } catch (err) {
@@ -69,6 +72,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('profile', JSON.stringify(data.profile || {}));
         
         setUser(data.user);
         setProfile(data.profile);
@@ -100,6 +104,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('profile', JSON.stringify(data.profile || {}));
         
         setUser(data.user);
         setProfile(data.profile);
@@ -129,6 +134,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('profile', JSON.stringify(data.profile || {}));
         
         setUser(data.user);
         setProfile(data.profile);
@@ -154,6 +160,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('profile', JSON.stringify(data.profile || {}));
         
         setUser(data.user);
         setProfile(data.profile);
@@ -179,6 +186,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('profile', JSON.stringify(data.profile || {}));
         
         setUser(data.user);
         setProfile(data.profile);
@@ -212,6 +220,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('profile');
     setUser(null);
     setProfile(null);
     window.location.href = '/login';
@@ -230,6 +239,7 @@ export const AuthProvider = ({ children }) => {
       
       if (res?.data?.success) {
         setProfile(res.data.student || res.data.company);
+        localStorage.setItem('profile', JSON.stringify(res.data.student || res.data.company || {}));
         return { success: true };
       }
       return { success: false, message: 'Failed to update profile' };
