@@ -11,10 +11,10 @@ const getTransporter = () => {
   if (transporter) return transporter;
 
   try {
-    const host = process.env.EMAIL_HOST || DEFAULT_HOST;
-    const port = parseInt(process.env.EMAIL_PORT) || DEFAULT_PORT;
-    const user = process.env.EMAIL_USER || DEFAULT_USER;
-    const pass = process.env.EMAIL_PASS || DEFAULT_PASS;
+    const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || DEFAULT_HOST;
+    const port = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT) || DEFAULT_PORT;
+    const user = process.env.EMAIL_USER || process.env.SMTP_USER || DEFAULT_USER;
+    const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS || DEFAULT_PASS;
 
     const config = {
       host,
@@ -40,7 +40,7 @@ const getTransporter = () => {
 export const sendEmail = async ({ to, subject, html }) => {
   try {
     const activeTransporter = getTransporter();
-    const user = process.env.EMAIL_USER || DEFAULT_USER;
+    const user = process.env.EMAIL_USER || process.env.SMTP_USER || DEFAULT_USER;
 
     if (!activeTransporter || !user) {
       console.log(`[EMAIL SIMULATION] To: ${to} | Subject: ${subject}`);

@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+const rawApiUrl = import.meta.env.VITE_API_URL || '/api';
+const normalizedApiUrl = (rawApiUrl.startsWith('http') && !rawApiUrl.endsWith('/api') && !rawApiUrl.endsWith('/api/'))
+  ? (rawApiUrl.replace(/\/$/, '') + '/api')
+  : rawApiUrl;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: normalizedApiUrl,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -10,7 +15,7 @@ const api = axios.create({
 export const getUploadUrl = (path) => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
-  const backendBase = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '';
+  const backendBase = normalizedApiUrl.replace('/api', '');
   return `${backendBase}${path}`;
 };
 
@@ -39,7 +44,7 @@ api.interceptors.response.use(
       
       if (refreshToken) {
         try {
-          const { data } = await axios.post('/api/auth/refresh', { refreshToken });
+          const { data } = await axios.post(`${normalizedApiUrl}/auth/refresh`, { refreshToken });
           if (data.success) {
             localStorage.setItem('accessToken', data.accessToken);
             originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
