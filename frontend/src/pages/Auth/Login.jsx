@@ -289,6 +289,7 @@ const Login = () => {
               label="Password"
               type="password"
               placeholder="••••••••"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}

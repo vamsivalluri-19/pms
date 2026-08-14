@@ -120,11 +120,11 @@ export const register = async (req, res) => {
         </div>
       `;
 
-      await sendEmail({
+      sendEmail({
         to: user.email,
         subject: 'PlaceTrack - Verify Your Email Address',
         html: emailHtml
-      });
+      }).catch(err => console.error('Error sending registration verification email:', err));
 
       return res.status(201).json({
         success: true,
@@ -259,11 +259,11 @@ export const login = async (req, res) => {
         </div>
       `;
 
-      await sendEmail({
+      sendEmail({
         to: user.email,
         subject: 'PlaceTrack - Verify Your Identity',
         html: emailHtml
-      });
+      }).catch(err => console.error('Error sending login verification email:', err));
 
       return res.status(403).json({
         success: false,
@@ -359,11 +359,11 @@ export const forgotPassword = async (req, res) => {
       <a href="${resetUrl}">${resetUrl}</a>
     `;
 
-    await sendEmail({
+    sendEmail({
       to: user.email,
       subject: 'PlaceTrack - Password Reset Request',
       html: message
-    });
+    }).catch(err => console.error('Error sending forgot password email:', err));
 
     return res.json({ success: true, message: 'Email sent successfully' });
   } catch (error) {
@@ -576,11 +576,11 @@ export const resendOTP = async (req, res) => {
       </div>
     `;
 
-    await sendEmail({
+    sendEmail({
       to: user.email,
       subject: 'PlaceTrack - Verify Your Email Address',
       html: emailHtml
-    });
+    }).catch(err => console.error('Error sending resend OTP email:', err));
 
     return res.json({ success: true, message: 'Verification code has been resent to your email.' });
   } catch (error) {

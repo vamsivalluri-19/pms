@@ -235,6 +235,7 @@ const Register = () => {
                 label="Password"
                 type="password"
                 placeholder="••••••••"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
@@ -244,6 +245,7 @@ const Register = () => {
                 label="Confirm Password"
                 type="password"
                 placeholder="••••••••"
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={loading}

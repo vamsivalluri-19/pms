@@ -37,7 +37,9 @@ app.use(helmet({
   crossOriginResourcePolicy: false // Allows files to be fetched from server on other origins
 }));
 app.use(cors({
-  origin: '*',
+  origin: (origin, callback) => {
+    callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));

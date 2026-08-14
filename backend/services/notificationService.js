@@ -56,11 +56,11 @@ export const createAndSendNotification = async ({ recipientId, senderId, type, t
         </div>
       `;
 
-      await sendEmail({
+      sendEmail({
         to: user.email,
         subject: `PlaceTrack - ${title}`,
         html: emailHtml
-      });
+      }).catch(err => console.error(`Error sending notification email to ${user.email}:`, err));
     }
 
     return notif;
