@@ -207,26 +207,34 @@ export const getStudentDashboardStats = async (req, res) => {
     const student = await Student.findOne({ user: req.user._id });
     if (!student) return res.status(404).json({ success: false, message: 'Student profile not found' });
 
-    const totalApplications = await Application.countDocuments({ student: student._id });
-    const shortlistedCount = await Application.countDocuments({ student: student._id, status: 'Shortlisted' });
-    const selectedCount = await Application.countDocuments({ student: student._id, status: 'Selected' });
-    const inProgressCount = await Application.countDocuments({ student: student._id, status: 'In Progress' });
-
-    const applicationsList = await Application.find({ student: student._id })
-      .populate('company', 'name logo')
-      .populate('job', 'title ctc')
-      .sort('-createdAt')
-      .limit(5);
-
-    const upcomingDrives = await Drive.find({
-      status: 'Approved',
-      'eligibilityCriteria.minCgpa': { $lte: student.cgpa },
-      'eligibilityCriteria.maxBacklogs': { $gte: student.activeBacklogs },
-      registrationEnd: { $gte: new Date() }
-    })
-      .populate('company', 'name logo')
-      .populate('job', 'title ctc')
-      .limit(3);
+    // Execute queries in parallel to drastically improve dashboard loading speed
+    const [
+      totalApplications,
+      shortlistedCount,
+      selectedCount,
+      inProgressCount,
+      applicationsList,
+      upcomingDrives
+    ] = await Promise.all([
+      Application.countDocuments({ student: student._id }),
+      Application.countDocuments({ student: student._id, status: 'Shortlisted' }),
+      Application.countDocuments({ student: student._id, status: 'Selected' }),
+      Application.countDocuments({ student: student._id, status: 'In Progress' }),
+      Application.find({ student: student._id })
+        .populate('company', 'name logo')
+        .populate('job', 'title ctc')
+        .sort('-createdAt')
+        .limit(5),
+      Drive.find({
+        status: 'Approved',
+        'eligibilityCriteria.minCgpa': { $lte: student.cgpa },
+        'eligibilityCriteria.maxBacklogs': { $gte: student.activeBacklogs },
+        registrationEnd: { $gte: new Date() }
+      })
+        .populate('company', 'name logo')
+        .populate('job', 'title ctc')
+        .limit(3)
+    ]);
 
     return res.json({
       success: true,
@@ -250,21 +258,29 @@ export const getCompanyDashboardStats = async (req, res) => {
     const company = await Company.findOne({ user: req.user._id });
     if (!company) return res.status(404).json({ success: false, message: 'Company profile not found' });
 
-    const totalJobs = await Job.countDocuments({ company: company._id });
-    const totalDrives = await Drive.countDocuments({ company: company._id });
-    const totalApplicants = await Application.countDocuments({ company: company._id });
-    const selectedStudents = await Placement.countDocuments({ company: company._id });
-
-    const recentDrives = await Drive.find({ company: company._id })
-      .populate('job', 'title ctc')
-      .sort('-createdAt')
-      .limit(3);
-
-    const recentApplicants = await Application.find({ company: company._id })
-      .populate('student', 'name studentId department cgpa')
-      .populate('job', 'title')
-      .sort('-createdAt')
-      .limit(5);
+    // Execute queries in parallel to optimize load times
+    const [
+      totalJobs,
+      totalDrives,
+      totalApplicants,
+      selectedStudents,
+      recentDrives,
+      recentApplicants
+    ] = await Promise.all([
+      Job.countDocuments({ company: company._id }),
+      Drive.countDocuments({ company: company._id }),
+      Application.countDocuments({ company: company._id }),
+      Placement.countDocuments({ company: company._id }),
+      Drive.find({ company: company._id })
+        .populate('job', 'title ctc')
+        .sort('-createdAt')
+        .limit(3),
+      Application.find({ company: company._id })
+        .populate('student', 'name studentId department cgpa')
+        .populate('job', 'title')
+        .sort('-createdAt')
+        .limit(5)
+    ]);
 
     return res.json({
       success: true,
@@ -285,14 +301,48 @@ export const getCompanyDashboardStats = async (req, res) => {
 
 export const getManagerDashboardStats = async (req, res) => {
   try {
-    const totalStudents = await Student.countDocuments();
-    const placedStudents = await Placement.countDocuments();
-    const activeCompanies = await Company.countDocuments({ verificationStatus: 'APPROVED' });
-    const activeDrives = await Drive.countDocuments({ status: 'Registration Open' });
-    const pendingCompanies = await Company.countDocuments({ verificationStatus: 'PENDING' });
+    // Run all database calls in parallel to solve slow query latency bottlenecks
+    const [
+      totalStudents,
+      placedStudents,
+      activeCompanies,
+      activeDrives,
+      pendingCompanies,
+      placements,
+      deptStats
+    ] = await Promise.all([
+      Student.countDocuments(),
+      Placement.countDocuments(),
+      Company.countDocuments({ verificationStatus: 'APPROVED' }),
+      Drive.countDocuments({ status: 'Registration Open' }),
+      Company.countDocuments({ verificationStatus: 'PENDING' }),
+      Placement.find(),
+      Student.aggregate([
+        {
+          $lookup: {
+            from: 'placements',
+            localField: '_id',
+            foreignField: 'student',
+            as: 'placementInfo'
+          }
+        },
+        {
+          $project: {
+            department: 1,
+            isPlaced: { $cond: [{ $gt: [{ $size: '$placementInfo' }, 0] }, 1, 0] }
+          }
+        },
+        {
+          $group: {
+            _id: '$department',
+            total: { $sum: 1 },
+            placed: { $sum: '$isPlaced' }
+          }
+        }
+      ])
+    ]);
     
     // Average Package Calculation
-    const placements = await Placement.find();
     let totalPackage = 0;
     let highestPackage = 0;
     
@@ -303,31 +353,6 @@ export const getManagerDashboardStats = async (req, res) => {
 
     const averagePackage = placements.length > 0 ? (totalPackage / placements.length).toFixed(2) : 0;
     const placementRate = totalStudents > 0 ? ((placedStudents / totalStudents) * 100).toFixed(1) : 0;
-
-    // Charts data: Department-wise placement
-    const deptStats = await Student.aggregate([
-      {
-        $lookup: {
-          from: 'placements',
-          localField: '_id',
-          foreignField: 'student',
-          as: 'placementInfo'
-        }
-      },
-      {
-        $project: {
-          department: 1,
-          isPlaced: { $cond: [{ $gt: [{ $size: '$placementInfo' }, 0] }, 1, 0] }
-        }
-      },
-      {
-        $group: {
-          _id: '$department',
-          total: { $sum: 1 },
-          placed: { $sum: '$isPlaced' }
-        }
-      }
-    ]);
 
     const departmentWiseData = deptStats.map(d => ({
       name: d._id || 'General',
@@ -358,12 +383,22 @@ export const getManagerDashboardStats = async (req, res) => {
 
 export const getAdminDashboardStats = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
-    const studentsCount = await Student.countDocuments();
-    const companiesCount = await Company.countDocuments();
-    const managersCount = await PlacementManager.countDocuments();
-    const drivesCount = await Drive.countDocuments();
-    const placementsCount = await Placement.countDocuments();
+    // Run count queries in parallel
+    const [
+      totalUsers,
+      studentsCount,
+      companiesCount,
+      managersCount,
+      drivesCount,
+      placementsCount
+    ] = await Promise.all([
+      User.countDocuments(),
+      Student.countDocuments(),
+      Company.countDocuments(),
+      PlacementManager.countDocuments(),
+      Drive.countDocuments(),
+      Placement.countDocuments()
+    ]);
 
     return res.json({
       success: true,

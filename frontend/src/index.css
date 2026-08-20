@@ -208,6 +208,7 @@ h1, h2, h3, h4, h5, h6 {
 .dark .premium-card { background: rgba(17, 24, 39, .82); border-color: rgba(71, 85, 105, .35); }
 .dark .app-shell main .bg-white.rounded-2xl { border-color: rgba(71, 85, 105, .35); }
 .dark .public-shell, .dark .auth-shell { background: #090d16; }
+.dark .auth-panel { background: rgba(10, 15, 27, 0.95) !important; }
 
 /* Dashboard navigation needs explicit treatment because it uses translucent surfaces. */
 .dark .app-shell aside { background: rgba(10, 15, 27, .94) !important; border-color: rgba(71, 85, 105, .38) !important; box-shadow: 10px 0 35px rgba(0,0,0,.22) !important; }
