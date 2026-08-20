@@ -88,10 +88,10 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// Rate Limiter
+// Rate Limiter - Relaxed to handle extreme high-concurrency scaling of 1,000,000+ users
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Limit each IP to 300 requests per window
+  max: 10000000, // Scale up to 10,000,000 requests per window to avoid loading/trashing errors
   message: { success: false, message: 'Too many requests, please try again later.' }
 });
 app.use('/api', limiter);

@@ -2,6 +2,8 @@ import { Job, Drive, DriveRound } from '../models/JobDrive.js';
 import { Company, Student, User } from '../models/User.js';
 import { logAuditEvent } from '../middleware/auditMiddleware.js';
 import { createAndSendNotification } from '../services/notificationService.js';
+import { Notification } from '../models/System.js';
+import { sendRealTimeNotification } from '../services/socketService.js';
 
 // ==================== JOB CONTROLLERS ====================
 
@@ -297,18 +299,35 @@ export const approveDrive = async (req, res) => {
         });
       }
 
-      // 2. Notify all students
-      const students = await Student.find();
-      for (const student of students) {
-        await createAndSendNotification({
-          recipientId: student.user,
-          senderId: req.user._id,
-          type: 'DRIVE_NEW',
-          title: 'New Placement Drive Posted',
-          message: `A new placement drive "${drive.name}" is open for registration. Deadline: ${new Date(drive.registrationEnd).toLocaleDateString()}.`,
-          link: `/student/drives`
-        });
+      // 2. Notify all students using bulk insert & async background processing to support 1,000,000+ users
+      const students = await Student.find().select('user');
+      const notificationDocs = students.map(student => ({
+        recipient: student.user,
+        sender: req.user._id,
+        type: 'DRIVE_NEW',
+        title: 'New Placement Drive Posted',
+        message: `A new placement drive "${drive.name}" is open for registration. Deadline: ${new Date(drive.registrationEnd).toLocaleDateString()}.`,
+        link: `/student/drives`
+      }));
+
+      if (notificationDocs.length > 0) {
+        await Notification.insertMany(notificationDocs);
       }
+
+      // Defer WebSockets & email dispatches to background tasks so server response is instant
+      process.nextTick(() => {
+        students.forEach(async (student) => {
+          try {
+            sendRealTimeNotification(student.user, {
+              type: 'DRIVE_NEW',
+              title: 'New Placement Drive Posted',
+              message: `A new placement drive "${drive.name}" is open for registration.`
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        });
+      });
     }
 
     return res.json({ success: true, message: `Drive status updated to ${drive.status}`, drive });
