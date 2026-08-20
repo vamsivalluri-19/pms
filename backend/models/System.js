@@ -75,8 +75,7 @@ const chatMessageSchema = new mongoose.Schema({
   },
   receiver: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
   },
   message: { type: String, required: true },
   isRead: { type: Boolean, default: false }
