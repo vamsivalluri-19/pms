@@ -12,7 +12,8 @@ import {
   resendOTP,
   googleLogin,
   googleRegister,
-  getAuthProviders
+  getAuthProviders,
+  changePassword
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -35,5 +36,8 @@ router.post('/google/register', googleRegister);
 router.get('/users', protect, authorizeRoles('ADMIN'), getAllUsers);
 router.put('/users/:id/status', protect, authorizeRoles('ADMIN'), toggleUserStatus);
 router.delete('/users/:id', protect, authorizeRoles('ADMIN'), deleteUser);
+
+// Password settings
+router.put('/change-password', protect, changePassword);
 
 export default router;

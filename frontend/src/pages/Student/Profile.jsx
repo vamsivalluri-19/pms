@@ -15,7 +15,10 @@ import {
   ExternalLink,
   Sparkles,
   Plus,
-  Printer
+  Printer,
+  Settings,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { getTemplateCSS, renderTemplateHTML } from '../../components/ResumeTemplates.jsx';
 
@@ -30,6 +33,8 @@ const StudentProfile = () => {
       setActiveTab('resume');
     } else if (path === '/student/documents') {
       setActiveTab('documents');
+    } else if (path === '/student/settings') {
+      setActiveTab('settings');
     } else {
       setActiveTab('personal');
     }
@@ -38,6 +43,35 @@ const StudentProfile = () => {
   // Message alert state
   const [alert, setAlert] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Settings States
+  const { theme, toggleTheme, user } = useContext(AuthContext);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmNewPassword) {
+      setAlert({ type: 'danger', msg: 'New passwords do not match.' });
+      return;
+    }
+    setLoading(true);
+    setAlert(null);
+    try {
+      const { data } = await api.put('/auth/change-password', { oldPassword, newPassword });
+      if (data.success) {
+        setAlert({ type: 'success', msg: 'Password updated successfully.' });
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+      }
+    } catch (err) {
+      setAlert({ type: 'danger', msg: err.response?.data?.message || 'Failed to update password.' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Edit states mapping profile
   const [name, setName] = useState(profile?.name || '');
@@ -327,7 +361,8 @@ const StudentProfile = () => {
             { id: 'skills', label: 'Skills & Development', icon: <Briefcase size={16} /> },
             { id: 'resume', label: 'Resume management', icon: <FileCheck size={16} /> },
             { id: 'resume-builder', label: 'ATS Resume Builder', icon: <Sparkles size={16} className="text-violet-500" /> },
-            { id: 'documents', label: 'Document verification', icon: <FileCheck size={16} /> }
+            { id: 'documents', label: 'Document verification', icon: <FileCheck size={16} /> },
+            { id: 'settings', label: 'Account Settings', icon: <Settings size={16} /> }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -857,6 +892,80 @@ const StudentProfile = () => {
                 </div>
                 <Button variant="primary" type="submit" className="w-fit self-end px-6 gap-2" disabled={loading || !documentFile}>
                   <Upload size={14} /> Submit Certificate
+                </Button>
+              </form>
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="flex flex-col gap-6 animate-page-enter">
+              <h3 className="text-sm font-bold text-slate-800 font-display mb-2">Account Settings</h3>
+              
+              {/* Account details section */}
+              <div className="p-5 border border-slate-100 rounded-xl bg-slate-50 flex flex-col gap-3 text-xs text-left">
+                <p className="font-bold text-slate-700 uppercase tracking-wider text-[10px] font-display">System Profile Coordinates</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-slate-400 font-semibold block">Email Address</span>
+                    <span className="font-bold text-slate-800">{user?.email}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 font-semibold block">System Role</span>
+                    <Badge status="primary">STUDENT</Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Theme Settings block */}
+              <div className="p-5 border border-slate-100 rounded-xl bg-slate-50 flex items-center justify-between text-xs text-left mt-2">
+                <div>
+                  <p className="font-bold text-slate-700 font-display">Interface Theme Preference</p>
+                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Toggle between light and dark modes</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="px-4 py-2 border border-slate-200 bg-white rounded-xl font-bold hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors text-slate-600 shadow-sm"
+                >
+                  {theme === 'light' ? (
+                    <><Moon size={14} className="text-violet-500" /> Dark Mode</>
+                  ) : (
+                    <><Sun size={14} className="text-amber-500" /> Light Mode</>
+                  )}
+                </button>
+              </div>
+
+              {/* Change Password Form */}
+              <form onSubmit={handlePasswordChange} className="mt-6 border-t border-slate-100 pt-6 flex flex-col gap-4 text-xs text-left">
+                <p className="font-bold text-slate-700 uppercase tracking-wider text-[10px] font-display">Update Password Credentials</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <Input
+                    label="Current Password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="New Password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Confirm New Password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button variant="primary" type="submit" className="w-fit self-end px-6 gap-2" disabled={loading}>
+                  Save Password Settings
                 </Button>
               </form>
             </div>
