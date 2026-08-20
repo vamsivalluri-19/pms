@@ -83,3 +83,8 @@ export const sendRealTimeChatMessage = (receiverId, senderId, messageObj) => {
     io.to(socketId).emit('chat-message-receive', { senderId, messageObj });
   }
 };
+
+export const broadcastGroupMessage = (senderId, messageObj) => {
+  if (!io) return;
+  io.emit('group-message-receive', { senderId, messageObj });
+};

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Application, RoundResult, Interview, Placement, Offer } from '../models/Recruitment.js';
 import { Student, Company } from '../models/User.js';
 import { Drive, DriveRound } from '../models/JobDrive.js';
@@ -541,6 +542,10 @@ export const generateDriveTickets = async (req, res) => {
   const { driveId } = req.params;
 
   try {
+    if (!driveId || !mongoose.Types.ObjectId.isValid(driveId)) {
+      return res.status(400).json({ success: false, message: 'Invalid or missing Placement Drive ID' });
+    }
+
     const drive = await Drive.findById(driveId);
     if (!drive) {
       return res.status(404).json({ success: false, message: 'Placement Drive not found' });
@@ -558,25 +563,29 @@ export const generateDriveTickets = async (req, res) => {
 
     // Find all student details to send notification alerts
     const applications = await Application.find({ drive: driveId, status: { $ne: 'Rejected' } })
-      .populate('student', 'user');
+      .populate('student');
 
     // Create notifications bulk insert docs
-    const notificationDocs = applications.map(app => {
+    const notificationDocs = [];
+    applications.forEach(app => {
       if (app.student && app.student.user) {
-        return {
+        notificationDocs.push({
           recipient: app.student.user,
           sender: req.user._id,
           type: 'TICKET_GENERATED',
           title: 'Hall Ticket Generated',
           message: `Your admission pass for the "${drive.name}" drive has been generated! You can now print/download it from your applications panel.`,
           link: '/student/applications'
-        };
+        });
       }
-      return null;
-    }).filter(doc => doc !== null);
+    });
 
     if (notificationDocs.length > 0) {
-      await Notification.insertMany(notificationDocs);
+      try {
+        await Notification.insertMany(notificationDocs);
+      } catch (err) {
+        console.error('Error inserting notifications in bulk:', err);
+      }
     }
 
     // Defer WebSocket dispatches to background tasks
@@ -590,18 +599,22 @@ export const generateDriveTickets = async (req, res) => {
               message: `Your admission pass for the "${drive.name}" drive has been generated!`
             });
           } catch (e) {
-            console.error(e);
+            console.error('Error sending real-time notification via WS:', e);
           }
         }
       });
     });
 
-    await logAuditEvent(req, {
-      action: 'Generate Hall Tickets Bulk',
-      entity: 'Drive',
-      entityId: driveId,
-      newValue: { count: result.modifiedCount }
-    });
+    try {
+      await logAuditEvent(req, {
+        action: 'Generate Hall Tickets Bulk',
+        entity: 'Drive',
+        entityId: driveId,
+        newValue: { count: result.modifiedCount }
+      });
+    } catch (auditErr) {
+      console.error('Audit event log failed:', auditErr);
+    }
 
     return res.json({
       success: true,
@@ -609,7 +622,7 @@ export const generateDriveTickets = async (req, res) => {
       count: result.modifiedCount
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error in generateDriveTickets:', error);
     return res.status(500).json({ success: false, message: 'Failed to generate drive hall tickets' });
   }
 };

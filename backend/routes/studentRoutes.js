@@ -6,7 +6,8 @@ import {
   uploadResume,
   uploadDocument,
   verifyDocument,
-  uploadPhoto
+  uploadPhoto,
+  getStudentProfileByUserId
 } from '../controllers/profileController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -15,6 +16,7 @@ import { upload } from '../middleware/uploadMiddleware.js';
 const router = express.Router();
 
 router.get('/', protect, authorizeRoles('PLACEMENT_MANAGER', 'ADMIN'), getStudents);
+router.get('/user/:userId', protect, getStudentProfileByUserId);
 router.get('/:id', protect, getStudentById);
 router.put('/:id', protect, updateStudentProfile);
 

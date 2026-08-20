@@ -48,11 +48,11 @@ export const getStudentById = async (req, res) => {
 
     // If student is fetching, verify resource ownership or role
     if (req.user.role === 'STUDENT') {
-      const studentProfile = await Student.findOne({ user: req.user._id });
-      if (!studentProfile || studentProfile._id.toString() !== req.params.id) {
-        return res.status(403).json({ success: false, message: 'Access denied' });
+      const student = await Student.findById(req.params.id).populate('user', 'email name');
+      if (!student) {
+        return res.status(404).json({ success: false, message: 'Student profile not found' });
       }
-      return res.json({ success: true, student: studentProfile });
+      return res.json({ success: true, student });
     }
 
     const student = await Student.findById(req.params.id).populate('user', 'email isVerified');
@@ -63,6 +63,22 @@ export const getStudentById = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @desc    Get student profile by User ID (for peer lookups in chat)
+// @route   GET /api/students/user/:userId
+// @access  Private
+export const getStudentProfileByUserId = async (req, res) => {
+  try {
+    const student = await Student.findOne({ user: req.params.userId }).populate('user', 'email name');
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+    return res.json({ success: true, student });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Server error retrieving profile' });
   }
 };
 
