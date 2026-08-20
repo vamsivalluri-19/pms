@@ -48,6 +48,8 @@ const Home = () => {
   const [drivesList, setDrivesList] = useState([]);
   const [loadingDrives, setLoadingDrives] = useState(true);
   const [publicStats, setPublicStats] = useState(null);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   useEffect(() => {
     const fetchPublicData = async () => {
@@ -87,7 +89,7 @@ const Home = () => {
       <div className="absolute bottom-[-10%] left-[-10%] w-[45%] h-[45%] rounded-full bg-violet-400/10 blur-[120px] pointer-events-none"></div>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 pt-32 pb-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <section className="max-w-7xl mx-auto px-6 pt-40 lg:pt-48 pb-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         <div className="lg:col-span-6 flex flex-col items-start text-left">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -132,15 +134,14 @@ const Home = () => {
           </motion.div>
         </div>
 
-        {/* Mockup Showcase */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6 }}
           className="lg:col-span-6 relative"
         >
-          <div className="relative rounded-2xl border border-slate-100 shadow-2xl p-2 bg-white/50 backdrop-blur-md">
-            <img src={studentPlacementImg} alt="PlaceTrack Student Placements" className="w-full h-auto rounded-xl object-contain shadow-sm" />
+          <div className="relative rounded-3xl border border-slate-100 shadow-2xl p-2 bg-white/50 backdrop-blur-md overflow-hidden">
+            <img src="https://www.chitkara.edu.in/blogs/wp-content/uploads/2022/05/MBA-Sales-and-Marketing.jpeg" alt="PlaceTrack Student Placements" className="w-full h-auto rounded-2xl object-cover aspect-[4/3] shadow-sm" />
           </div>
         </motion.div>
       </section>
@@ -411,12 +412,116 @@ const Home = () => {
           <div className="flex flex-col md:items-end gap-3 text-slate-500">
             <p>© 2026 PlaceTrack. All rights reserved.</p>
             <div className="flex gap-4 font-semibold text-[11px]">
-              <span className="hover:text-white cursor-pointer">Privacy Policy</span>
-              <span className="hover:text-white cursor-pointer">Terms & Conditions</span>
+              <button
+                onClick={() => setShowPrivacy(true)}
+                className="hover:text-white cursor-pointer bg-transparent border-none p-0 font-semibold text-slate-500 hover:text-white transition-colors"
+              >
+                Privacy Policy
+              </button>
+              <button
+                onClick={() => setShowTerms(true)}
+                className="hover:text-white cursor-pointer bg-transparent border-none p-0 font-semibold text-slate-500 hover:text-white transition-colors"
+              >
+                Terms & Conditions
+              </button>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Privacy Policy Modal */}
+      {showPrivacy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="relative max-w-xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col p-6 animate-page-enter">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5 text-left">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-primary-600 text-white">
+                  <CheckCircle2 size={16} />
+                </div>
+                <span className="font-bold font-display text-sm text-slate-800">PlaceTrack Privacy Policy</span>
+              </div>
+              <button
+                onClick={() => setShowPrivacy(false)}
+                className="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer font-display"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4 text-left overflow-y-auto max-h-[60vh] text-xs text-slate-600 leading-relaxed pr-2">
+              <div>
+                <h4 className="font-bold text-slate-800 text-[13px] mb-1">1. Information Collection & Storage</h4>
+                <p>We collect and archive student records including name, student ID, CGPA, department, phone, email, high school grade certificates, document verification receipts, and upload files (resumes, photos) necessary to evaluate career eligibility.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800 text-[13px] mb-1">2. Core Processing Scope</h4>
+                <p>All recorded academic credentials are processed exclusively to run criteria matching evaluations against recruiting company parameters, generate QR-authenticated candidate admission passes, and display college statistics dashboards.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800 text-[13px] mb-1">3. Corporate Partner Transparency</h4>
+                <p>By registering and applying for drives, students explicitly authorize recruiters corresponding to those specific drives to inspect their resumes, verified academic metrics, and interview scorecard round details.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800 text-[13px] mb-1">4. Secure Auditing Logs</h4>
+                <p>Administrative actions such as document verification check marks, placement drive updates, audit events, and user credential verification logs are maintained in automated audit trails to ensure complete transparency.</p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6 border-t border-slate-100 pt-4">
+              <Button variant="secondary" onClick={() => setShowPrivacy(false)} className="px-6">
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Terms & Conditions Modal */}
+      {showTerms && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="relative max-w-xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col p-6 animate-page-enter">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5 text-left">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-primary-600 text-white">
+                  <CheckCircle2 size={16} />
+                </div>
+                <span className="font-bold font-display text-sm text-slate-800">PlaceTrack Terms & Conditions</span>
+              </div>
+              <button
+                onClick={() => setShowTerms(false)}
+                className="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer font-display"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4 text-left overflow-y-auto max-h-[60vh] text-xs text-slate-600 leading-relaxed pr-2">
+              <div>
+                <h4 className="font-bold text-slate-800 text-[13px] mb-1">1. Academic Data Integrity</h4>
+                <p>Candidates must guarantee complete authenticity of their registered academic marks, CGPA stats, active backlog counts, and degree majors. Misrepresentation of high school or university scores constitutes structural misconduct and is subject to immediate suspension.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800 text-[13px] mb-1">2. Drive Application Controls</h4>
+                <p>Submitting an application binds the candidate to recruiter-specific requirements. Placement cell hall tickets remain locked until verified by the Director and released through the bulk generator desk.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800 text-[13px] mb-1">3. Professional Conduct Policy</h4>
+                <p>All candidates must act with decorum during assessment rounds, coding exams, and virtual interview room sessions. Malpractice, plagiarism, or unexcused absences will be automatically reported to the disciplinary committee.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800 text-[13px] mb-1">4. Management Desks Rights</h4>
+                <p>The placement coordinator cell retains absolute authority to inspect candidate documents, invalidate inaccurate resume assertions, update round selection grading, and lock access keys in the event of administrative infractions.</p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6 border-t border-slate-100 pt-4">
+              <Button variant="secondary" onClick={() => setShowTerms(false)} className="px-6">
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
