@@ -13,9 +13,12 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
-  HelpCircle
+  HelpCircle,
+  Printer,
+  User
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { getUploadUrl } from '../../services/api.js';
 
 const StudentApplications = () => {
   const location = useLocation();
@@ -27,6 +30,9 @@ const StudentApplications = () => {
   
   // Placements list for offers acceptance
   const [placements, setPlacements] = useState([]);
+
+  // Selected Hall Ticket state
+  const [selectedTicket, setSelectedTicket] = useState(null);
 
   const fetchApplicationsData = async () => {
     try {
@@ -138,9 +144,20 @@ const StudentApplications = () => {
                       <p className="text-[9px] text-slate-400 mt-2">Applied: {new Date(app.appliedDate).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <Badge status={app.status === 'Selected' ? 'success' : app.status === 'Rejected' ? 'danger' : 'primary'}>
-                    {app.status}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <Badge status={app.status === 'Selected' ? 'success' : app.status === 'Rejected' ? 'danger' : 'primary'}>
+                      {app.status}
+                    </Badge>
+                    {app.status !== 'Rejected' && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTicket(app)}
+                        className="text-[10px] font-extrabold text-primary-500 hover:text-primary-600 transition-colors flex items-center gap-1 cursor-pointer animate-pulse-slow"
+                      >
+                        <Award size={11} /> Hall Ticket
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -278,8 +295,143 @@ const StudentApplications = () => {
           )}
         </div>
       )}
-    </div>
-  );
+
+    {/* Hall Ticket Modal */}
+    {selectedTicket && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+        <div className="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col p-6 animate-page-enter">
+          {/* Header branding */}
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5 text-left">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-primary-600 text-white">
+                <Award size={16} />
+              </div>
+              <span className="font-bold font-display text-sm text-slate-800">Candidate Hall Ticket</span>
+            </div>
+            <button
+              onClick={() => setSelectedTicket(null)}
+              className="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Ticket Content Container for Printing */}
+          <div id="printable-hallticket" className="p-6 border border-slate-200 rounded-2xl bg-slate-50/50 flex flex-col gap-6 text-left relative overflow-hidden">
+            {/* Badge watermarks */}
+            <div className="absolute top-[-20%] right-[-20%] w-[50%] h-[50%] rounded-full bg-primary-500/5 blur-[40px] pointer-events-none"></div>
+
+            {/* Institution Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+              <div>
+                <h3 className="text-[11px] font-black tracking-tight font-display text-slate-800 uppercase">{profile?.university || 'PlaceTrack University'}</h3>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Official Admission Pass</p>
+              </div>
+              <div className="text-right">
+                <span className="text-[9px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+                  APPROVED
+                </span>
+              </div>
+            </div>
+
+            {/* Student coordinates & photo */}
+            <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+              {profile?.photo ? (
+                <img
+                  src={getUploadUrl(profile.photo)}
+                  alt={profile.name}
+                  className="h-16 w-16 rounded-xl object-cover border border-slate-100 shrink-0"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 flex items-center justify-center shrink-0">
+                  <User size={26} />
+                </div>
+              )}
+
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-bold text-slate-800 truncate font-display">{profile?.name}</h4>
+                <p className="text-[11px] font-semibold text-slate-500 mt-0.5">ID: {profile?.studentId}</p>
+                <p className="text-[10px] text-slate-400 mt-1 font-semibold uppercase">{profile?.degree} - {profile?.department}</p>
+              </div>
+            </div>
+
+            {/* Candidate Info Grid */}
+            <div className="grid grid-cols-2 gap-4 text-[11px]">
+              <div>
+                <span className="text-[9px] text-slate-400 uppercase font-semibold block">University Email</span>
+                <span className="font-bold text-slate-700 break-all">{profile?.user?.email || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="text-[9px] text-slate-400 uppercase font-semibold block">Contact Number</span>
+                <span className="font-bold text-slate-700">{profile?.phone || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="text-[9px] text-slate-400 uppercase font-semibold block">Applied Drive / Position</span>
+                <span className="font-bold text-slate-700 leading-tight block mt-0.5">{selectedTicket.job?.title}</span>
+                <span className="text-[9px] text-slate-400 font-bold uppercase mt-0.5 block">{selectedTicket.company?.name}</span>
+              </div>
+              <div>
+                <span className="text-[9px] text-slate-400 uppercase font-semibold block">Event Date</span>
+                <span className="font-bold text-slate-700 block mt-0.5">{new Date(selectedTicket.drive?.driveDate || selectedTicket.appliedDate).toLocaleDateString()}</span>
+              </div>
+            </div>
+
+            {/* QR Code Segment */}
+            <div className="mt-2 border-t border-slate-200 pt-4 flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-[10px] font-bold text-slate-700 font-display">Venues & Entry QR Verification</p>
+                <p className="text-[9px] text-slate-400 mt-1 leading-normal">
+                  Scan this QR code to verify coordinates, photo identity, and selection round logs at the placement cell checking desk.
+                </p>
+              </div>
+              <div className="p-2 bg-white rounded-xl border border-slate-100 shadow-sm shrink-0">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(
+                    window.location.origin + '/verify-ticket/' + selectedTicket._id
+                  )}`}
+                  alt="Verification QR"
+                  className="h-20 w-20"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Print & Action Controls */}
+          <div className="flex gap-3 mt-6">
+            <Button
+              variant="primary"
+              onClick={() => {
+                const printContents = document.getElementById('printable-hallticket').innerHTML;
+                const originalContents = document.body.innerHTML;
+                
+                document.body.innerHTML = `
+                  <div style="padding: 40px; font-family: sans-serif; color: #1e293b; max-width: 450px; margin: 0 auto;">
+                    ${printContents}
+                  </div>
+                `;
+                window.print();
+                
+                document.body.innerHTML = originalContents;
+                window.location.reload();
+              }}
+              className="flex-1 gap-2"
+            >
+              <Printer size={14} /> Print Hall Ticket
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setSelectedTicket(null)}
+              className="px-6"
+            >
+              Close
+            </Button>
+          </div>
+
+        </div>
+      </div>
+    )}
+  </div>
+);
 };
 
 export default StudentApplications;

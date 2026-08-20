@@ -13,6 +13,7 @@ import ForgotPassword from '../pages/Auth/ForgotPassword.jsx';
 import ResetPassword from '../pages/Auth/ResetPassword.jsx';
 import InterviewRoom from '../pages/Auth/InterviewRoom.jsx';
 import VerifyEmail from '../pages/Auth/VerifyEmail.jsx';
+import VerifyTicket from '../pages/Public/VerifyTicket.jsx';
 
 // Student pages
 import StudentDashboard from '../pages/Student/Dashboard.jsx';
@@ -48,6 +49,7 @@ const AppRoutes = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/verify-ticket/:applicationId" element={<VerifyTicket />} />
       
       {/* Student Protected Routes */}
       <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>

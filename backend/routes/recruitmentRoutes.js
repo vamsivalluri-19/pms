@@ -11,7 +11,8 @@ import {
   getPlacements,
   updatePlacementStatus,
   uploadOfferLetter,
-  getOffers
+  getOffers,
+  getPublicApplicationVerify
 } from '../controllers/recruitmentController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -22,6 +23,7 @@ const router = express.Router();
 // Application endpoints
 router.post('/applications', protect, authorizeRoles('STUDENT'), applyToDrive);
 router.get('/applications', protect, getApplications);
+router.get('/applications/public/verify/:id', getPublicApplicationVerify);
 router.get('/applications/:id', protect, getApplicationById);
 router.put('/applications/:id/status', protect, authorizeRoles('COMPANY', 'PLACEMENT_MANAGER', 'ADMIN'), updateApplicationStatus);
 

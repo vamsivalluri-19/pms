@@ -504,3 +504,32 @@ export const getOffers = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Failed to retrieve offer details' });
   }
 };
+
+// @desc    Get public application details for QR verification
+// @route   GET /api/applications/public/verify/:id
+// @access  Public
+export const getPublicApplicationVerify = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id)
+      .populate({
+        path: 'student',
+        select: 'name studentId department degree phone photo university',
+        populate: {
+          path: 'user',
+          select: 'email'
+        }
+      })
+      .populate('company', 'name logo')
+      .populate('job', 'title location ctc')
+      .populate('drive', 'name driveDate');
+
+    if (!application) {
+      return res.status(404).json({ success: false, message: 'Verification Ticket not found' });
+    }
+
+    return res.json({ success: true, application });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Server error retrieving verification details' });
+  }
+};
