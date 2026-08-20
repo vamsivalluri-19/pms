@@ -150,8 +150,12 @@ const StudentDrives = () => {
                 </div>
 
                 <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start w-full sm:w-fit gap-3 self-stretch sm:self-center border-t border-slate-50 pt-4 sm:pt-0 sm:border-0">
-                  <Badge status={appliedDrives.has(d._id) ? 'primary' : 'success'}>
-                    {appliedDrives.has(d._id) ? 'APPLIED' : 'ACTIVE'}
+                  <Badge status={
+                    appliedDrives.has(d._id) ? 'primary' :
+                    new Date(d.registrationEnd) < new Date() ? 'danger' : 'success'
+                  }>
+                    {appliedDrives.has(d._id) ? 'APPLIED' :
+                     new Date(d.registrationEnd) < new Date() ? 'CLOSED' : 'ACTIVE'}
                   </Badge>
                   <ChevronRight size={18} className="text-slate-400 hidden sm:block" />
                 </div>
@@ -193,6 +197,18 @@ const StudentDrives = () => {
                     <span className="text-[10px] text-slate-400 uppercase font-display block">Work Mode</span>
                     <span>{selectedDrive.job?.workMode || selectedDrive.mode}</span>
                   </div>
+                  <div className="col-span-2 grid grid-cols-2 gap-4 border-t border-slate-50/50 pt-3">
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase font-display block">Drive Date</span>
+                      <span>{new Date(selectedDrive.driveDate).toLocaleDateString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase font-display block">Registration Deadline</span>
+                      <span className={new Date(selectedDrive.registrationEnd) < new Date() ? 'text-rose-500 font-bold' : ''}>
+                        {new Date(selectedDrive.registrationEnd).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -200,11 +216,17 @@ const StudentDrives = () => {
               <div className="p-4 rounded-xl border flex flex-col gap-3 text-xs bg-slate-50 border-slate-100">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-700 font-display">Eligibility Verdict</span>
-                  <Badge status={eligibility?.eligible ? 'success' : 'danger'}>
-                    {eligibility?.eligible ? 'ELIGIBLE' : 'INELIGIBLE'}
+                  <Badge status={
+                    new Date(selectedDrive.registrationEnd) < new Date() ? 'danger' :
+                    eligibility?.eligible ? 'success' : 'danger'
+                  }>
+                    {new Date(selectedDrive.registrationEnd) < new Date() ? 'CLOSED' :
+                     eligibility?.eligible ? 'ELIGIBLE' : 'INELIGIBLE'}
                   </Badge>
                 </div>
-                {eligibility?.eligible ? (
+                {new Date(selectedDrive.registrationEnd) < new Date() ? (
+                  <p className="text-[11px] text-rose-500 font-semibold leading-snug">Registration has closed for this drive. New applications are no longer accepted.</p>
+                ) : eligibility?.eligible ? (
                   <p className="text-[11px] text-emerald-600 font-medium">Your academic credentials meet the criteria. You can apply.</p>
                 ) : (
                   <div className="flex flex-col gap-1.5 mt-1.5 text-[11px] text-rose-500">
@@ -253,10 +275,12 @@ const StudentDrives = () => {
                   <Button
                     variant="primary"
                     className="w-full"
-                    disabled={!eligibility?.eligible || submittingApp}
+                    disabled={new Date(selectedDrive.registrationEnd) < new Date() || !eligibility?.eligible || submittingApp}
                     onClick={handleApply}
                   >
-                    {submittingApp ? 'Submitting...' : eligibility?.eligible ? 'Apply for Position' : 'Locked'}
+                    {submittingApp ? 'Submitting...' : 
+                     new Date(selectedDrive.registrationEnd) < new Date() ? 'Registration Closed' :
+                     eligibility?.eligible ? 'Apply for Position' : 'Locked'}
                   </Button>
                 )}
               </div>
