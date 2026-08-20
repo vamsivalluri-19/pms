@@ -42,7 +42,8 @@ const applicationSchema = new mongoose.Schema({
     default: 'Applied'
   },
   currentRound: { type: Number, default: 1 },
-  remarks: String
+  remarks: String,
+  hallTicketGenerated: { type: Boolean, default: false }
 }, { timestamps: true });
 
 // Ensure student can apply to a drive only once

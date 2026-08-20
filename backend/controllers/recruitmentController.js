@@ -533,3 +533,83 @@ export const getPublicApplicationVerify = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error retrieving verification details' });
   }
 };
+
+// @desc    Generate all hall tickets for a specific drive and notify candidates
+// @route   POST /api/applications/drives/:driveId/generate-tickets
+// @access  Placement Manager, Admin
+export const generateDriveTickets = async (req, res) => {
+  const { driveId } = req.params;
+
+  try {
+    const drive = await Drive.findById(driveId);
+    if (!drive) {
+      return res.status(404).json({ success: false, message: 'Placement Drive not found' });
+    }
+
+    // Update all applications for this drive
+    const result = await Application.updateMany(
+      { drive: driveId, status: { $ne: 'Rejected' } },
+      { hallTicketGenerated: true }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.json({ success: true, message: 'No active student applications found for this drive.', count: 0 });
+    }
+
+    // Find all student details to send notification alerts
+    const applications = await Application.find({ drive: driveId, status: { $ne: 'Rejected' } })
+      .populate('student', 'user');
+
+    // Create notifications bulk insert docs
+    const notificationDocs = applications.map(app => {
+      if (app.student && app.student.user) {
+        return {
+          recipient: app.student.user,
+          sender: req.user._id,
+          type: 'TICKET_GENERATED',
+          title: 'Hall Ticket Generated',
+          message: `Your admission pass for the "${drive.name}" drive has been generated! You can now print/download it from your applications panel.`,
+          link: '/student/applications'
+        };
+      }
+      return null;
+    }).filter(doc => doc !== null);
+
+    if (notificationDocs.length > 0) {
+      await Notification.insertMany(notificationDocs);
+    }
+
+    // Defer WebSocket dispatches to background tasks
+    process.nextTick(() => {
+      applications.forEach((app) => {
+        if (app.student && app.student.user) {
+          try {
+            sendRealTimeNotification(app.student.user, {
+              type: 'TICKET_GENERATED',
+              title: 'Hall Ticket Generated',
+              message: `Your admission pass for the "${drive.name}" drive has been generated!`
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      });
+    });
+
+    await logAuditEvent(req, {
+      action: 'Generate Hall Tickets Bulk',
+      entity: 'Drive',
+      entityId: driveId,
+      newValue: { count: result.modifiedCount }
+    });
+
+    return res.json({
+      success: true,
+      message: `Successfully generated ${result.modifiedCount} hall tickets for candidates. Notifications dispatched.`,
+      count: result.modifiedCount
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Failed to generate drive hall tickets' });
+  }
+};

@@ -149,13 +149,19 @@ const StudentApplications = () => {
                       {app.status}
                     </Badge>
                     {app.status !== 'Rejected' && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTicket(app)}
-                        className="text-[10px] font-extrabold text-primary-500 hover:text-primary-600 transition-colors flex items-center gap-1 cursor-pointer animate-pulse-slow"
-                      >
-                        <Award size={11} /> Hall Ticket
-                      </button>
+                      app.hallTicketGenerated ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTicket(app)}
+                          className="text-[10px] font-extrabold text-primary-500 hover:text-primary-600 transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <Award size={11} /> Hall Ticket
+                        </button>
+                      ) : (
+                        <span className="text-[9px] font-bold text-slate-400 select-none bg-slate-100/80 px-2.5 py-0.5 rounded-md border border-slate-200/50">
+                          Ticket Pending
+                        </span>
+                      )
                     )}
                   </div>
                 </div>

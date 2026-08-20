@@ -12,7 +12,8 @@ import {
   updatePlacementStatus,
   uploadOfferLetter,
   getOffers,
-  getPublicApplicationVerify
+  getPublicApplicationVerify,
+  generateDriveTickets
 } from '../controllers/recruitmentController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -26,6 +27,7 @@ router.get('/applications', protect, getApplications);
 router.get('/applications/public/verify/:id', getPublicApplicationVerify);
 router.get('/applications/:id', protect, getApplicationById);
 router.put('/applications/:id/status', protect, authorizeRoles('COMPANY', 'PLACEMENT_MANAGER', 'ADMIN'), updateApplicationStatus);
+router.post('/applications/drives/:driveId/generate-tickets', protect, authorizeRoles('PLACEMENT_MANAGER', 'ADMIN'), generateDriveTickets);
 
 // Scorecard results endpoints
 router.post('/results', protect, authorizeRoles('COMPANY', 'PLACEMENT_MANAGER', 'ADMIN'), submitRoundResult);

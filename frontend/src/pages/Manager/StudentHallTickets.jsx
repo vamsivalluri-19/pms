@@ -9,6 +9,9 @@ const StudentHallTickets = () => {
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [drives, setDrives] = useState([]);
+  const [selectedDriveId, setSelectedDriveId] = useState('');
+  const [generating, setGenerating] = useState(false);
 
   const fetchApplications = async () => {
     try {
@@ -27,9 +30,42 @@ const StudentHallTickets = () => {
     }
   };
 
+  const fetchDrives = async () => {
+    try {
+      const { data } = await api.get('/drives');
+      if (data.success) {
+        // Show active or approved drives
+        setDrives(data.drives || []);
+        if (data.drives && data.drives.length > 0) {
+          setSelectedDriveId(data.drives[0]._id);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchApplications();
+    fetchDrives();
   }, []);
+
+  const handleGenerateTicketsBulk = async () => {
+    if (!selectedDriveId) return;
+    setGenerating(true);
+    try {
+      const { data } = await api.post(`/applications/drives/${selectedDriveId}/generate-tickets`);
+      if (data.success) {
+        alert(data.message);
+        fetchApplications();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate drive hall tickets.');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const filteredApps = applications.filter((app) => {
     const studentName = app.student?.name || '';
@@ -54,6 +90,38 @@ const StudentHallTickets = () => {
       <div className="flex flex-col gap-2">
         <h2 className="text-2xl font-bold text-slate-800 font-display">Student Placement Hall Tickets</h2>
         <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Browse, audit, and batch download/print candidate venue admission keys</p>
+      </div>
+
+      {/* Bulk Ticket Generator Panel */}
+      <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col sm:flex-row sm:items-end justify-between gap-4 text-xs">
+        <div className="absolute top-[-30%] right-[-30%] w-[50%] h-[50%] rounded-full bg-primary-500/5 blur-[40px] pointer-events-none"></div>
+        <div className="flex-1 flex flex-col gap-2">
+          <h3 className="text-sm font-bold text-slate-800 font-display">Bulk Generate Candidate Passes</h3>
+          <p className="text-[10.5px] text-slate-400 font-semibold uppercase leading-snug">
+            Select a drive to release admission keys and dispatch system alert notifications to all applied students at once.
+          </p>
+          <div className="mt-2 max-w-md w-full">
+            <Select
+              options={
+                drives.length > 0 
+                  ? drives.map(d => ({ value: d._id, label: `${d.company?.name || 'Company'} - ${d.name}` })) 
+                  : [{ value: '', label: 'No placement drives active' }]
+              }
+              value={selectedDriveId}
+              onChange={(e) => setSelectedDriveId(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="shrink-0 sm:pb-1">
+          <Button
+            variant="primary"
+            onClick={handleGenerateTicketsBulk}
+            disabled={generating || !selectedDriveId}
+            className="w-full sm:w-auto px-6 py-2.5 shadow-lg shadow-primary-500/10"
+          >
+            {generating ? 'Releasing Tickets...' : 'Generate All Tickets'}
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -94,6 +162,7 @@ const StudentHallTickets = () => {
                 <th className="px-6 py-4">Department / CGPA</th>
                 <th className="px-6 py-4">Applied Job / Drive</th>
                 <th className="px-6 py-4">Application Status</th>
+                <th className="px-6 py-4">Ticket Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -128,6 +197,11 @@ const StudentHallTickets = () => {
                     <td className="px-6 py-4">
                       <Badge status={app.status === 'Selected' ? 'success' : 'primary'}>
                         {app.status}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 font-semibold">
+                      <Badge status={app.hallTicketGenerated ? 'success' : 'warning'}>
+                        {app.hallTicketGenerated ? 'GENERATED' : 'PENDING'}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-right">
