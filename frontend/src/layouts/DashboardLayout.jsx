@@ -1,13 +1,15 @@
 import React, { useContext, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar.jsx';
 import Topbar from '../components/Topbar.jsx';
 import { AuthContext } from '../context/AuthContext.jsx';
 import WorkspaceHeader from '../components/WorkspaceHeader.jsx';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useContext(AuthContext);
+  const location = useLocation();
   const workspace = { STUDENT: 'workspace-student', COMPANY: 'workspace-company', PLACEMENT_MANAGER: 'workspace-manager', ADMIN: 'workspace-admin' }[user?.role] || 'workspace-student';
 
   const toggleSidebar = () => {
@@ -23,7 +25,17 @@ const DashboardLayout = () => {
           <div className="max-w-7xl mx-auto page-reveal role-glow">
             <WorkspaceHeader />
             <div className="mt-7">
-            <Outlet />
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={location.pathname}
+                  initial={{ opacity: 0, y: 8, filter: 'blur(3px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, y: -5, filter: 'blur(2px)' }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <Outlet />
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </main>

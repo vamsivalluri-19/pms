@@ -40,13 +40,13 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 3. Create User
+    // 3. Create User (Bypassing verification, set isVerified to true for all users)
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const user = await User.create({
       email,
       password: hashedPassword,
       role,
-      isVerified: role === 'ADMIN', // Auto-verify admin only
+      isVerified: true, // Auto-verify all roles to bypass OTP verification
       otp,
       otpExpire: Date.now() + 10 * 60 * 1000 // 10 minutes
     });
@@ -103,50 +103,8 @@ export const register = async (req, res) => {
       newValue: { email, role }
     });
 
-    // 6. Send Verification Email (if not Admin)
-    if (user.role !== 'ADMIN') {
-      const emailHtml = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-          <div style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); padding: 30px; text-align: center; color: white;">
-            <h1 style="margin: 0; font-size: 24px; font-weight: 800;">Welcome to PlaceTrack</h1>
-          </div>
-          <div style="padding: 30px; background-color: #ffffff; color: #1e293b; text-align: center;">
-            <h2 style="margin-top: 0; color: #0f172a;">Verify Your Email Address</h2>
-            <p style="font-size: 15px; color: #475569; line-height: 1.5;">Thank you for registering. Please enter the following 6-digit verification code to complete your registration:</p>
-            <div style="margin: 30px 0; font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #4f46e5; background-color: #f1f5f9; padding: 15px 30px; display: inline-block; border-radius: 8px;">
-              ${otp}
-            </div>
-            <p style="font-size: 13px; color: #94a3b8;">This code is valid for 10 minutes. If you did not request this, you can safely ignore this email.</p>
-          </div>
-          <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
-            <p style="margin: 0; font-size: 12px; color: #94a3b8;">This is an automated security code. Please do not reply directly.</p>
-          </div>
-        </div>
-      `;
-
-      sendEmail({
-        to: user.email,
-        subject: 'PlaceTrack - Verify Your Email Address',
-        html: emailHtml
-      }).catch(err => console.error('Registration email background error:', err));
-
-      const isMailUnconfigured = process.env.NODE_ENV !== 'production' || 
-        !process.env.EMAIL_USER || 
-        process.env.EMAIL_USER.includes('your_email') || 
-        process.env.EMAIL_USER.includes('your_smtp');
-
-      const message = isMailUnconfigured 
-        ? `Account created! (For testing/demo, your OTP is: ${otp})` 
-        : 'Registration successful! A verification code has been sent to your email.';
-
-      return res.status(201).json({
-        success: true,
-        isVerified: false,
-        message,
-        email: user.email,
-        debugOtp: otp
-      });
-    }
+    // 6. Send Verification Email (if not Admin) - Bypassed for testing
+    // All users are automatically verified now.
 
     // 7. Generate Tokens for Admin
     const accessToken = generateAccessToken(user);
@@ -190,54 +148,10 @@ export const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    // 2b. Check email verification status
+    // 2b. Check email verification status - Bypassed for testing
     if (!user.isVerified) {
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      user.otp = otp;
-      user.otpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+      user.isVerified = true;
       await user.save();
-
-      const emailHtml = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-          <div style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); padding: 30px; text-align: center; color: white;">
-            <h1 style="margin: 0; font-size: 24px; font-weight: 800;">Verify Your Identity</h1>
-          </div>
-          <div style="padding: 30px; background-color: #ffffff; color: #1e293b; text-align: center;">
-            <h2 style="margin-top: 0; color: #0f172a;">Email Verification Required</h2>
-            <p style="font-size: 15px; color: #475569; line-height: 1.5;">To log in, please enter the following 6-digit verification code:</p>
-            <div style="margin: 30px 0; font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #4f46e5; background-color: #f1f5f9; padding: 15px 30px; display: inline-block; border-radius: 8px;">
-              ${otp}
-            </div>
-            <p style="font-size: 13px; color: #94a3b8;">This code is valid for 10 minutes. If you did not request this, you can safely ignore this email.</p>
-          </div>
-          <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
-            <p style="margin: 0; font-size: 12px; color: #94a3b8;">This is an automated security code. Please do not reply directly.</p>
-          </div>
-        </div>
-      `;
-
-      sendEmail({
-        to: user.email,
-        subject: 'PlaceTrack - Verify Your Identity',
-        html: emailHtml
-      }).catch(err => console.error('Login email background error:', err));
-
-      const isMailUnconfigured = process.env.NODE_ENV !== 'production' || 
-        !process.env.EMAIL_USER || 
-        process.env.EMAIL_USER.includes('your_email') || 
-        process.env.EMAIL_USER.includes('your_smtp');
-
-      const message = isMailUnconfigured 
-        ? `Your email address is not verified yet. (For testing/demo, your OTP is: ${otp})` 
-        : 'Your email address is not verified yet. A verification code has been sent to your email.';
-
-      return res.status(403).json({
-        success: false,
-        isVerified: false,
-        message,
-        email: user.email,
-        debugOtp: otp
-      });
     }
 
     // 3. Load profile

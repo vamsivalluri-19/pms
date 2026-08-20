@@ -6,6 +6,10 @@
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Outfit', sans-serif;
 
+  --font-size-xs: 0.8125rem; /* ~13px for better readability */
+  --font-size-sm: 0.9375rem; /* ~15px for inputs and text */
+  --font-size-base: 1rem;    /* 16px */
+
   --color-primary-50: #f5f8ff;
   --color-primary-100: #ebf1ff;
   --color-primary-500: #2563eb;
@@ -29,7 +33,10 @@
 }
 
 * { -webkit-tap-highlight-color: transparent; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
@@ -48,6 +55,10 @@ html { scroll-behavior: smooth; }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+html, body, main, .overflow-y-auto {
+  scrollbar-gutter: stable;
 }
 
 /* Custom Utilities for Premium Look */
@@ -71,6 +82,7 @@ body {
   color: #1e293b;
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
+  scrollbar-gutter: stable;
 }
 
 /* Shared product surface: used by dashboards, profiles and management screens. */
