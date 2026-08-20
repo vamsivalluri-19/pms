@@ -14,6 +14,7 @@ import ResetPassword from '../pages/Auth/ResetPassword.jsx';
 import InterviewRoom from '../pages/Auth/InterviewRoom.jsx';
 import VerifyEmail from '../pages/Auth/VerifyEmail.jsx';
 import VerifyTicket from '../pages/Public/VerifyTicket.jsx';
+import VerifyStaffTicket from '../pages/Public/VerifyStaffTicket.jsx';
 
 // Student pages
 import StudentDashboard from '../pages/Student/Dashboard.jsx';
@@ -31,6 +32,8 @@ import CompanyApplicants from '../pages/Company/Applicants.jsx';
 import ManagerDashboard from '../pages/Manager/Dashboard.jsx';
 import ManagerStudents from '../pages/Manager/Students.jsx';
 import ManagerReports from '../pages/Manager/Reports.jsx';
+import StudentHallTickets from '../pages/Manager/StudentHallTickets.jsx';
+import StaffHallTickets from '../pages/Manager/StaffHallTickets.jsx';
 
 // Admin pages
 import AdminDashboard from '../pages/Admin/Dashboard.jsx';
@@ -50,6 +53,7 @@ const AppRoutes = () => {
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/verify-ticket/:applicationId" element={<VerifyTicket />} />
+      <Route path="/verify-staff/:ticketId" element={<VerifyStaffTicket />} />
       
       {/* Student Protected Routes */}
       <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
@@ -93,6 +97,8 @@ const AppRoutes = () => {
           <Route path="/manager/interviews" element={<ManagerDashboard />} />
           <Route path="/manager/placements" element={<ManagerReports />} />
           <Route path="/manager/reports" element={<ManagerReports />} />
+          <Route path="/manager/student-halltickets" element={<StudentHallTickets />} />
+          <Route path="/manager/staff-halltickets" element={<StaffHallTickets />} />
           <Route path="/manager/settings" element={<ManagerDashboard />} />
         </Route>
       </Route>

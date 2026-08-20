@@ -16,7 +16,10 @@ import {
   getPublicStats,
   getAcademicSettings,
   createAcademicSetting,
-  deleteAcademicSetting
+  deleteAcademicSetting,
+  createStaffTicket,
+  getStaffTickets,
+  getPublicStaffVerify
 } from '../controllers/systemController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -49,5 +52,10 @@ router.get('/audit-logs', protect, authorizeRoles('ADMIN'), getAuditLogs);
 router.get('/academic-settings', protect, getAcademicSettings); // Publicly readable by logged in users
 router.post('/academic-settings', protect, authorizeRoles('ADMIN'), createAcademicSetting);
 router.delete('/academic-settings/:type/:id', protect, authorizeRoles('ADMIN'), deleteAcademicSetting);
+
+// Staff Tickets
+router.get('/staff-tickets/public/verify/:id', getPublicStaffVerify);
+router.post('/staff-tickets', protect, authorizeRoles('PLACEMENT_MANAGER', 'ADMIN'), createStaffTicket);
+router.get('/staff-tickets', protect, authorizeRoles('PLACEMENT_MANAGER', 'ADMIN'), getStaffTickets);
 
 export default router;

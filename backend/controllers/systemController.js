@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Notification, Message, AuditLog } from '../models/System.js';
+import { Notification, Message, AuditLog, StaffTicket } from '../models/System.js';
 import { Student, Company, User, PlacementManager } from '../models/User.js';
 import { Job, Drive } from '../models/JobDrive.js';
 import { Application, Placement } from '../models/Recruitment.js';
@@ -510,5 +510,48 @@ export const deleteAcademicSetting = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Failed to delete academic setting' });
+  }
+};
+
+// ==================== STAFF TICKETS ====================
+
+export const createStaffTicket = async (req, res) => {
+  const { name, staffId, role, phone, email, driveName } = req.body;
+  try {
+    const staffTicket = await StaffTicket.create({
+      name,
+      staffId,
+      role,
+      phone,
+      email,
+      driveName
+    });
+    return res.status(201).json({ success: true, staffTicket });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Failed to generate staff hall ticket' });
+  }
+};
+
+export const getStaffTickets = async (req, res) => {
+  try {
+    const staffTickets = await StaffTicket.find().sort('-createdAt');
+    return res.json({ success: true, count: staffTickets.length, staffTickets });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve staff tickets' });
+  }
+};
+
+export const getPublicStaffVerify = async (req, res) => {
+  try {
+    const staffTicket = await StaffTicket.findById(req.params.id);
+    if (!staffTicket) {
+      return res.status(404).json({ success: false, message: 'Staff Verification Ticket not found' });
+    }
+    return res.json({ success: true, staffTicket });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Server error retrieving verification details' });
   }
 };

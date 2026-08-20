@@ -70,6 +70,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           { name: 'Applications', path: '/manager/applications', icon: <ClipboardList size={18} /> },
           { name: 'Interviews', path: '/manager/interviews', icon: <Calendar size={18} /> },
           { name: 'Placements', path: '/manager/placements', icon: <CheckCircle size={18} /> },
+          { name: 'Student Hall Tickets', path: '/manager/student-halltickets', icon: <Award size={18} /> },
+          { name: 'Staff Hall Tickets', path: '/manager/staff-halltickets', icon: <ShieldCheck size={18} /> },
           { name: 'Reports', path: '/manager/reports', icon: <BarChart2 size={18} /> },
           { name: 'Settings', path: '/manager/settings', icon: <Settings size={18} /> }
         ];

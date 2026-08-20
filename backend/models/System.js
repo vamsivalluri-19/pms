@@ -53,3 +53,15 @@ const auditLogSchema = new mongoose.Schema({
 export const Notification = mongoose.model('Notification', notificationSchema);
 export const Message = mongoose.model('Message', messageSchema);
 export const AuditLog = mongoose.model('AuditLog', auditLogSchema);
+
+// StaffTicket Schema
+const staffTicketSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  staffId: { type: String, required: true },
+  role: { type: String, required: true }, // e.g. Co-ordinator, Volunteer, Invigilator, Admin Officer
+  phone: String,
+  email: String,
+  driveName: String
+}, { timestamps: true });
+
+export const StaffTicket = mongoose.model('StaffTicket', staffTicketSchema);
