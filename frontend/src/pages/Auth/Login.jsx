@@ -372,6 +372,10 @@ const Login = () => {
           )}
 
           <div id="google-signin-btn" className="w-full flex justify-center py-1"></div>
+          
+          <p className="text-[9.5px] text-slate-400 font-medium leading-normal text-center mt-2.5 max-w-xs mx-auto">
+            Note: If you encounter a Google OAuth <code>origin_mismatch</code> error, please sign in using your college email and password above.
+          </p>
           </>}
 
           <p className="mt-8 text-center text-xs text-slate-400 font-semibold">
