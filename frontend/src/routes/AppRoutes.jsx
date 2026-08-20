@@ -21,6 +21,7 @@ import StudentDashboard from '../pages/Student/Dashboard.jsx';
 import StudentProfile from '../pages/Student/Profile.jsx';
 import StudentDrives from '../pages/Student/Drives.jsx';
 import StudentApplications from '../pages/Student/Applications.jsx';
+import StudentHallTicketsView from '../pages/Student/HallTickets.jsx';
 
 // Company pages
 import CompanyDashboard from '../pages/Company/Dashboard.jsx';
@@ -70,6 +71,7 @@ const AppRoutes = () => {
           <Route path="/student/placements" element={<StudentApplications />} />
           <Route path="/student/settings" element={<StudentProfile />} />
           <Route path="/student/chat" element={<Chat />} />
+          <Route path="/student/hall-tickets" element={<StudentHallTicketsView />} />
         </Route>
       </Route>
 

@@ -48,6 +48,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           { name: 'Interviews', path: '/student/interviews', icon: <Calendar size={18} /> },
           { name: 'Results', path: '/student/results', icon: <Award size={18} /> },
           { name: 'Placements', path: '/student/placements', icon: <CheckCircle size={18} /> },
+          { name: 'Hall Tickets', path: '/student/hall-tickets', icon: <Award size={18} /> },
           { name: 'Chat Support', path: '/student/chat', icon: <MessageSquare size={18} /> },
           { name: 'Settings', path: '/student/settings', icon: <Settings size={18} /> }
         ];
