@@ -323,6 +323,35 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Administrator Section */}
+      <section className="bg-slate-900 text-white py-16 border-t border-b border-slate-800 relative overflow-hidden" id="admin-details">
+        <div className="absolute top-[-30%] left-[-30%] w-[60%] h-[60%] rounded-full bg-primary-500/10 blur-[100px] pointer-events-none"></div>
+        <div className="max-w-4xl mx-auto px-6 text-center flex flex-col items-center gap-6 relative z-10">
+          <div className="p-3 bg-white/5 border border-white/10 rounded-full text-primary-400 mb-2">
+            <GraduationCap size={28} />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold font-display">Placement Operations Administrator</h2>
+          <p className="text-xs text-slate-400 max-w-md leading-relaxed">
+            Have questions regarding drive configurations, eligibility computations, or recruiter authorization audits? Reach out directly to our coordinator desk.
+          </p>
+
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-2xl text-left">
+            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-2">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Administrator</span>
+              <span className="text-sm font-bold text-white">Vamsi Valluri</span>
+            </div>
+            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-2">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Contact Number</span>
+              <span className="text-sm font-bold text-white">+91 6301231575</span>
+            </div>
+            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-2">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Official Email</span>
+              <span className="text-sm font-bold text-white break-all">vamsivalluri52@gmail.com</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Expandable Accordion FAQs */}
       <section className="max-w-4xl mx-auto px-6 py-24" id="faq">
         <div className="text-center mb-16">

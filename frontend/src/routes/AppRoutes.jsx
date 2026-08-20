@@ -37,6 +37,7 @@ import StaffHallTickets from '../pages/Manager/StaffHallTickets.jsx';
 
 // Admin pages
 import AdminDashboard from '../pages/Admin/Dashboard.jsx';
+import Chat from '../pages/Shared/Chat.jsx';
 
 // Error pages
 import { NotFound, Unauthorized } from '../pages/Errors/ErrorPages.jsx';
@@ -68,6 +69,7 @@ const AppRoutes = () => {
           <Route path="/student/results" element={<StudentApplications />} />
           <Route path="/student/placements" element={<StudentApplications />} />
           <Route path="/student/settings" element={<StudentProfile />} />
+          <Route path="/student/chat" element={<Chat />} />
         </Route>
       </Route>
 
@@ -100,6 +102,7 @@ const AppRoutes = () => {
           <Route path="/manager/student-halltickets" element={<StudentHallTickets />} />
           <Route path="/manager/staff-halltickets" element={<StaffHallTickets />} />
           <Route path="/manager/settings" element={<ManagerDashboard />} />
+          <Route path="/manager/chat" element={<Chat />} />
         </Route>
       </Route>
 
@@ -117,6 +120,7 @@ const AppRoutes = () => {
           <Route path="/admin/reports" element={<AdminDashboard />} />
           <Route path="/admin/audit-logs" element={<AdminDashboard />} />
           <Route path="/admin/settings" element={<AdminDashboard />} />
+          <Route path="/admin/chat" element={<Chat />} />
         </Route>
       </Route>
       {/* Interview Video Call Full-screen Route */}

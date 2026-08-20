@@ -18,7 +18,8 @@ import {
   ShieldCheck,
   GraduationCap,
   LogOut,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -47,6 +48,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           { name: 'Interviews', path: '/student/interviews', icon: <Calendar size={18} /> },
           { name: 'Results', path: '/student/results', icon: <Award size={18} /> },
           { name: 'Placements', path: '/student/placements', icon: <CheckCircle size={18} /> },
+          { name: 'Chat Support', path: '/student/chat', icon: <MessageSquare size={18} /> },
           { name: 'Settings', path: '/student/settings', icon: <Settings size={18} /> }
         ];
       case 'COMPANY':
@@ -73,6 +75,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           { name: 'Student Hall Tickets', path: '/manager/student-halltickets', icon: <Award size={18} /> },
           { name: 'Staff Hall Tickets', path: '/manager/staff-halltickets', icon: <ShieldCheck size={18} /> },
           { name: 'Reports', path: '/manager/reports', icon: <BarChart2 size={18} /> },
+          { name: 'Communications', path: '/manager/chat', icon: <MessageSquare size={18} /> },
           { name: 'Settings', path: '/manager/settings', icon: <Settings size={18} /> }
         ];
       case 'ADMIN':
@@ -87,6 +90,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           { name: 'Drives', path: '/admin/drives', icon: <GraduationCap size={18} /> },
           { name: 'Reports', path: '/admin/reports', icon: <BarChart2 size={18} /> },
           { name: 'Audit Logs', path: '/admin/audit-logs', icon: <History size={18} /> },
+          { name: 'Communications', path: '/admin/chat', icon: <MessageSquare size={18} /> },
           { name: 'Settings', path: '/admin/settings', icon: <Settings size={18} /> }
         ];
       default:

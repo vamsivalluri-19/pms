@@ -23,6 +23,7 @@ import companyRoutes from './routes/companyRoutes.js';
 import jobDriveRoutes from './routes/jobDriveRoutes.js';
 import recruitmentRoutes from './routes/recruitmentRoutes.js';
 import systemRoutes from './routes/systemRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 
 // Connect to Database
 connectDB();
@@ -111,6 +112,7 @@ app.use('/api/companies', companyRoutes);
 app.use('/api', jobDriveRoutes);
 app.use('/api', recruitmentRoutes);
 app.use('/api', systemRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Default status endpoint
 app.get('/', (req, res) => {

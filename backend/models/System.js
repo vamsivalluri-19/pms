@@ -65,3 +65,21 @@ const staffTicketSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 export const StaffTicket = mongoose.model('StaffTicket', staffTicketSchema);
+
+// ChatMessage Schema (for peer-to-peer and support chat)
+const chatMessageSchema = new mongoose.Schema({
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  receiver: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  message: { type: String, required: true },
+  isRead: { type: Boolean, default: false }
+}, { timestamps: true });
+
+export const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);

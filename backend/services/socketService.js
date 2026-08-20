@@ -75,3 +75,11 @@ export const sendRealTimeNotification = (userId, notification) => {
     io.to(socketId).emit('notification', notification);
   }
 };
+
+export const sendRealTimeChatMessage = (receiverId, senderId, messageObj) => {
+  if (!io || !receiverId) return;
+  const socketId = userSockets.get(receiverId.toString());
+  if (socketId) {
+    io.to(socketId).emit('chat-message-receive', { senderId, messageObj });
+  }
+};
