@@ -94,6 +94,10 @@ const Login = () => {
       }
 
       try {
+        console.log("[PlaceTrack OAuth Debug] Initializing Google Sign-In GSI SDK");
+        console.log("[PlaceTrack OAuth Debug] Sending Client ID:", googleClientId);
+        console.log("[PlaceTrack OAuth Debug] Client window origin:", window.location.origin);
+
         if (window[GOOGLE_INIT_CLIENT_KEY] !== googleClientId) {
           window.google.accounts.id.initialize({
             client_id: googleClientId,
@@ -376,6 +380,9 @@ const Login = () => {
           <p className="text-[9.5px] text-slate-400 font-medium leading-normal text-center mt-2.5 max-w-xs mx-auto">
             Note: If you encounter a Google OAuth <code>origin_mismatch</code> error, please sign in using your college email and password above.
           </p>
+          <div className="text-[8px] text-slate-400/70 font-mono text-center mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100/60 max-w-xs mx-auto overflow-x-auto whitespace-nowrap">
+            Debug: Origin: {window.location.origin} | Client ID: {import.meta.env.VITE_GOOGLE_CLIENT_ID || 'Not Configured'}
+          </div>
           </>}
 
           <p className="mt-8 text-center text-xs text-slate-400 font-semibold">
