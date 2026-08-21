@@ -32,6 +32,13 @@ const Chat = () => {
     role: 'GROUP'
   };
 
+  const selectedContactRef = useRef(null);
+
+  // Keep the ref in sync with state
+  useEffect(() => {
+    selectedContactRef.current = selectedContact;
+  }, [selectedContact]);
+
   // 1. Initialize Socket.io connection
   useEffect(() => {
     const socketUrl = import.meta.env.VITE_SOCKET_URL || 
@@ -46,21 +53,17 @@ const Chat = () => {
     });
 
     socket.on('chat-message-receive', ({ senderId, messageObj }) => {
-      setSelectedContact((currentContact) => {
-        if (currentContact && currentContact._id === senderId) {
-          setMessages((prev) => [...prev, messageObj]);
-        }
-        return currentContact;
-      });
+      const currentContact = selectedContactRef.current;
+      if (currentContact && currentContact._id === senderId) {
+        setMessages((prev) => [...prev, messageObj]);
+      }
     });
 
     socket.on('group-message-receive', ({ senderId, messageObj }) => {
-      setSelectedContact((currentContact) => {
-        if (currentContact && currentContact._id === 'group-chat') {
-          setMessages((prev) => [...prev, messageObj]);
-        }
-        return currentContact;
-      });
+      const currentContact = selectedContactRef.current;
+      if (currentContact && currentContact._id === 'group-chat') {
+        setMessages((prev) => [...prev, messageObj]);
+      }
     });
 
     return () => {

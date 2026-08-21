@@ -5,10 +5,36 @@ const userSockets = new Map(); // userId -> socketId
 
 export const initSocket = (server) => {
   const allowedOrigins = (process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:5173,http://localhost:3050')
-    .split(',').map((origin) => origin.trim()).filter(Boolean);
+    .split(',').map((origin) => origin.trim().replace(/\/+$/, '')).filter(Boolean);
+
+  const wildcardToRegex = (pattern) => {
+    const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`^${escaped.replace(/\\\*/g, '.*')}$`);
+  };
+
+  const exactOrigins = new Set();
+  const wildcardOrigins = [];
+
+  allowedOrigins.forEach((allowedOrigin) => {
+    if (allowedOrigin.includes('*')) {
+      wildcardOrigins.push(wildcardToRegex(allowedOrigin));
+    } else {
+      exactOrigins.add(allowedOrigin);
+    }
+  });
+
+  const isLocalDevOrigin = (origin) => /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
+
+  const isAllowedOrigin = (origin) => {
+    const normalizedOrigin = origin.trim().replace(/\/+$/, '');
+    if (exactOrigins.has(normalizedOrigin)) return true;
+    if (isLocalDevOrigin(normalizedOrigin)) return true;
+    return wildcardOrigins.some((pattern) => pattern.test(normalizedOrigin));
+  };
+
   io = new Server(server, {
     cors: {
-      origin: (origin, callback) => (!origin || allowedOrigins.includes(origin)
+      origin: (origin, callback) => (!origin || isAllowedOrigin(origin)
         ? callback(null, true)
         : callback(new Error('Origin is not allowed by CORS'))),
       methods: ['GET', 'POST'],
