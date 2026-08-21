@@ -108,6 +108,7 @@ const InterviewRoom = () => {
     const socket = socketRef.current;
 
     socket.on('connect', () => {
+      console.log("[InterviewRoom WebRTC] Connected to signaling socket. Room ID:", roomId);
       socket.emit('join-room', {
         roomId,
         userId: user._id,
@@ -115,8 +116,13 @@ const InterviewRoom = () => {
       });
     });
 
+    socket.on('connect_error', (err) => {
+      console.error("[InterviewRoom WebRTC] Socket connection error:", err);
+    });
+
     // Handle new peer joining
     socket.on('user-joined', async ({ socketId, userId, userName: peerName }) => {
+      console.log("[InterviewRoom WebRTC] Peer joined:", peerName, "Socket ID:", socketId);
       setIsConnected(true);
       setSimulationMode(false); // Disable simulation if a real user joins
       addSystemMessage(`${peerName} joined the interview room.`);
@@ -127,12 +133,14 @@ const InterviewRoom = () => {
 
     // Handle incoming WebRTC offer
     socket.on('offer', async ({ senderSocketId, offer }) => {
+      console.log("[InterviewRoom WebRTC] Received WebRTC offer from:", senderSocketId);
       await createPeerConnection(senderSocketId, false);
       if (pcRef.current) {
         try {
           await pcRef.current.setRemoteDescription(new RTCSessionDescription(offer));
           const answer = await pcRef.current.createAnswer();
           await pcRef.current.setLocalDescription(answer);
+          console.log("[InterviewRoom WebRTC] Sending WebRTC answer to:", senderSocketId);
           socket.emit('answer', { targetSocketId: senderSocketId, answer });
         } catch (err) {
           console.error('Error handling WebRTC offer:', err);
@@ -142,6 +150,7 @@ const InterviewRoom = () => {
 
     // Handle incoming WebRTC answer
     socket.on('answer', async ({ answer }) => {
+      console.log("[InterviewRoom WebRTC] Received WebRTC answer");
       if (pcRef.current) {
         try {
           await pcRef.current.setRemoteDescription(new RTCSessionDescription(answer));
@@ -153,6 +162,7 @@ const InterviewRoom = () => {
 
     // Handle incoming ICE candidates
     socket.on('ice-candidate', async ({ candidate }) => {
+      console.log("[InterviewRoom WebRTC] Received remote ICE candidate");
       if (pcRef.current && pcRef.current.signalingState !== 'closed') {
         try {
           await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
@@ -215,8 +225,10 @@ const InterviewRoom = () => {
 
     // Capture remote stream and assign to remote stream state
     pc.ontrack = (event) => {
+      console.log("[InterviewRoom WebRTC] Remote track received:", event.streams);
       if (event.streams && event.streams[0]) {
         setRemoteStream(event.streams[0]);
+        setIsConnected(true);
       }
     };
 
