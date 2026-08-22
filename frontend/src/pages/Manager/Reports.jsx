@@ -101,14 +101,14 @@ const ManagerReports = () => {
         {/* Department wise summaries table */}
         <div className="lg:col-span-6 p-6 bg-white border border-slate-100 rounded-2xl shadow-xs">
           <h3 className="text-sm font-bold text-slate-800 font-display mb-4">Department-wise Breakdown</h3>
-          <div className="overflow-hidden border border-slate-50 rounded-xl">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 font-bold text-slate-600 border-b border-slate-100">
+          <div className="overflow-x-auto border border-slate-100 rounded-xl">
+            <table className="w-full text-xs text-left align-middle">
+              <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider whitespace-nowrap">
                 <tr>
-                  <th className="px-4 py-3">Branch</th>
-                  <th className="px-4 py-3 text-center">Enrolled</th>
-                  <th className="px-4 py-3 text-center">Placed</th>
-                  <th className="px-4 py-3 text-right">Placement Rate</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Branch</th>
+                  <th className="px-4 py-3 text-center whitespace-nowrap">Enrolled</th>
+                  <th className="px-4 py-3 text-center whitespace-nowrap">Placed</th>
+                  <th className="px-4 py-3 text-right whitespace-nowrap">Placement Rate</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -128,13 +128,13 @@ const ManagerReports = () => {
         {/* Master Placed Students list */}
         <div className="lg:col-span-6 p-6 bg-white border border-slate-100 rounded-2xl shadow-xs">
           <h3 className="text-sm font-bold text-slate-800 font-display mb-4">Recent Placements Offer Logs</h3>
-          <div className="overflow-hidden border border-slate-50 rounded-xl">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 font-bold text-slate-600 border-b border-slate-100">
+          <div className="overflow-x-auto border border-slate-100 rounded-xl">
+            <table className="w-full text-xs text-left align-middle">
+              <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider whitespace-nowrap">
                 <tr>
-                  <th className="px-4 py-3">Student Name</th>
-                  <th className="px-4 py-3">Company Recruiter</th>
-                  <th className="px-4 py-3 text-right">Salary Package</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Student Name</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Company Recruiter</th>
+                  <th className="px-4 py-3 text-right whitespace-nowrap">Salary Package</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">

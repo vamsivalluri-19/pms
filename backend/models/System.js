@@ -82,3 +82,26 @@ const chatMessageSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 export const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
+
+// Global System Settings Schema
+const systemSettingsSchema = new mongoose.Schema({
+  institutionName: { type: String, default: 'PlaceTrack Institutional Control Centre' },
+  adminEmail: { type: String, default: 'admin@institution.edu' },
+  allowStudentRegistration: { type: Boolean, default: true },
+  allowRecruiterRegistration: { type: Boolean, default: true },
+  requireRecruiterApproval: { type: Boolean, default: true },
+  sessionTimeoutMinutes: { type: Number, default: 60 },
+  maxLoginAttempts: { type: Number, default: 5 },
+  enable2FA: { type: Boolean, default: false },
+  strictPasswordPolicy: { type: Boolean, default: true },
+  emailNotificationsEnabled: { type: Boolean, default: true },
+  systemAnnouncement: { type: String, default: 'Placement Drive Season 2026 is active. Ensure all student profiles are updated.' },
+  minCgpaDefault: { type: Number, default: 6.5 },
+  maxBacklogsDefault: { type: Number, default: 0 },
+  maxOffersPerStudent: { type: Number, default: 2 },
+  autoBackupSchedule: { type: String, default: 'Daily (02:00 AM)' },
+  maintenanceMode: { type: Boolean, default: false }
+}, { timestamps: true });
+
+export const SystemSettings = mongoose.model('SystemSettings', systemSettingsSchema);
+

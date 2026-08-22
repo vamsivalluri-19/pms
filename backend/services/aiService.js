@@ -77,152 +77,164 @@ const TECH_SKILLS_DATASET = {
 const ACTION_VERBS = ['develop', 'design', 'implement', 'optimize', 'scale', 'automate', 'integrate', 'reduce', 'improve', 'build', 'create', 'launch', 'lead', 'manage', 'engineer', 'deploy'];
 
 // 1. AI Resume Analyzer (Enhanced local heuristic model & Gemini fallback)
+// Helper to extract text from a raw PDF base64 string
+const extractTextFromPdfBase64 = (pdfBase64) => {
+  if (!pdfBase64) return '';
+  try {
+    const rawBufferStr = Buffer.from(pdfBase64, 'base64').toString('latin1');
+    const matches = rawBufferStr.match(/\(([^()]{2,100})\)/g);
+    if (matches && matches.length > 0) {
+      return matches
+        .map(m => m.slice(1, -1))
+        .filter(t => /[a-zA-Z0-9#+.]/.test(t))
+        .join(' ');
+    }
+  } catch (err) {
+    console.error('PDF text extraction error:', err.message);
+  }
+  return '';
+};
+
+// 1. AI Resume Analyzer (Advanced PDF Text Parser & ATS Engine)
 export const analyzeResume = async (studentProfile, pdfBase64 = null) => {
-  // A. Local Advanced Heuristic Model
-  let formattingPoints = 0;
+  const pdfText = extractTextFromPdfBase64(pdfBase64);
+  const combinedText = (
+    pdfText + ' ' +
+    (studentProfile.name || '') + ' ' +
+    (studentProfile.department || '') + ' ' +
+    (studentProfile.degree || '') + ' ' +
+    (studentProfile.skills || []).join(' ') + ' ' +
+    (studentProfile.github || '') + ' ' +
+    (studentProfile.linkedin || '') + ' ' +
+    (studentProfile.portfolio || '') + ' ' +
+    (studentProfile.projects || []).map(p => (p.title || '') + ' ' + (p.description || '')).join(' ') + ' ' +
+    (studentProfile.internships || []).map(i => (i.role || '') + ' ' + (i.company || '') + ' ' + (i.description || '')).join(' ') + ' ' +
+    (studentProfile.certifications || []).map(c => (c.name || '') + ' ' + (c.authority || '')).join(' ')
+  ).toLowerCase();
+
   const suggestions = [];
   const missingSkills = [];
+  const detectedSkills = [];
 
-  // 1. Evaluate Formatting/Links presence
-  if (studentProfile.github) formattingPoints += 10;
-  else suggestions.push('Include a GitHub link to showcase your source code repositories.');
+  // A. Contact & Social Links Score (Max 20 pts)
+  let contactPoints = 0;
+  const hasEmail = /[\w.-]+@[\w.-]+\.\w+/.test(combinedText) || studentProfile.user?.email;
+  const hasPhone = /\b\d{10}\b|\+?\d[\d -]{8,}\d/.test(combinedText) || studentProfile.phone;
+  const hasGithub = combinedText.includes('github') || studentProfile.github;
+  const hasLinkedin = combinedText.includes('linkedin') || studentProfile.linkedin;
+  const hasPortfolio = combinedText.includes('portfolio') || combinedText.includes('leetcode') || studentProfile.portfolio;
 
-  if (studentProfile.linkedin) formattingPoints += 10;
-  else suggestions.push('Include a LinkedIn profile to showcase your professional network.');
+  if (hasEmail) contactPoints += 4;
+  if (hasPhone) contactPoints += 4;
+  if (hasGithub) contactPoints += 4;
+  else suggestions.push('Add your GitHub profile URL to showcase public code repositories.');
+  
+  if (hasLinkedin) contactPoints += 4;
+  else suggestions.push('Include a LinkedIn profile link for recruiter candidate verification.');
 
-  if (studentProfile.portfolio) formattingPoints += 10;
-  else suggestions.push('Add a personal portfolio link to present live demo links for your web apps.');
+  if (hasPortfolio) contactPoints += 4;
 
-  const formattingScore = Math.min(Math.round((formattingPoints / 30) * 100), 100);
+  // B. Technical Skills ATS Scanning (Max 35 pts)
+  const tracksCount = { frontend: 0, backend: 0, databases: 0, devops: 0, cloud: 0, dataScience: 0, coreCs: 0 };
 
-  // 2. Evaluate Academic & Core Profile
-  let academicPoints = 0;
-  if (studentProfile.cgpa >= 8.5) academicPoints += 10;
-  else if (studentProfile.cgpa >= 7.5) academicPoints += 7;
-  else academicPoints += 5;
-
-  if (studentProfile.certifications && studentProfile.certifications.length > 0) academicPoints += 5;
-  else suggestions.push('Complete and add industry-relevant certifications (e.g. AWS, Oracle, Google Cloud) to boost ATS score.');
-
-  if (studentProfile.internships && studentProfile.internships.length > 0) academicPoints += 5;
-  else suggestions.push('Seek technical internships or project-based roles to build commercial software experience.');
-
-  // 3. Skills Analysis using our Dataset
-  const userSkills = (studentProfile.skills || []).map(s => s.toLowerCase());
-  let skillsScore = Math.min(userSkills.length * 3, 30); // 10 skills maxes out base score
-
-  // Categorize user skills to identify missing tracks
-  const tracks = {
-    frontend: 0,
-    backend: 0,
-    devops: 0,
-    databases: 0,
-    cloud: 0,
-    coreCs: 0
-  };
-
-  userSkills.forEach(skill => {
-    for (const [track, keywords] of Object.entries(TECH_SKILLS_DATASET)) {
-      if (keywords.includes(skill) || keywords.some(k => skill.includes(k))) {
-        tracks[track]++;
+  for (const [track, skillsArr] of Object.entries(TECH_SKILLS_DATASET)) {
+    skillsArr.forEach(skill => {
+      const skillLower = skill.toLowerCase();
+      if (combinedText.includes(skillLower)) {
+        tracksCount[track]++;
+        if (!detectedSkills.includes(skill)) {
+          detectedSkills.push(skill.toUpperCase());
+        }
       }
-    }
-  });
+    });
+  }
 
-  // Suggest missing foundational tech
-  if (tracks.devops === 0 && tracks.cloud === 0) {
+  let skillPoints = Math.min(detectedSkills.length * 3.5, 35);
+  if (detectedSkills.length === 0) {
+    // If text parsing didn't pick up dataset, check profile skills array directly
+    const userSkillsArr = studentProfile.skills || [];
+    userSkillsArr.forEach(s => detectedSkills.push(s.toUpperCase()));
+    skillPoints = Math.min(userSkillsArr.length * 4, 30);
+  }
+
+  // Identify track gaps
+  if (tracksCount.devops === 0 && tracksCount.cloud === 0) {
     missingSkills.push('Docker', 'AWS');
-    suggestions.push('Learn containerization (Docker) and basic cloud services (AWS EC2/S3) for modern deployment skills.');
+    suggestions.push('Learn Docker containerization and AWS basics to improve cloud deployment ATS score.');
   }
-  if (tracks.databases === 0) {
+  if (tracksCount.databases === 0) {
     missingSkills.push('PostgreSQL', 'MongoDB');
-    suggestions.push('Learn relational and non-relational database management systems (DBMS) such as PostgreSQL or MongoDB.');
+    suggestions.push('Add relational or NoSQL database management experience (e.g. PostgreSQL, MongoDB).');
   }
-  if (tracks.frontend === 0) {
+  if (tracksCount.frontend === 0) {
     missingSkills.push('React.js', 'TailwindCSS');
   }
-  if (tracks.backend === 0) {
+  if (tracksCount.backend === 0) {
     missingSkills.push('Node.js', 'Express.js');
   }
 
-  // 4. Project Descriptions Heuristic Analysis (NLP impact scoring)
-  let projectPoints = 0;
-  let actionVerbCount = 0;
-  let metricCount = 0;
-  let descriptionLengthCheck = true;
+  // C. ATS Standard Section Headers (Max 20 pts)
+  let sectionPoints = 0;
+  if (combinedText.includes('education') || combinedText.includes('academic') || combinedText.includes('degree') || studentProfile.degree) sectionPoints += 5;
+  if (combinedText.includes('experience') || combinedText.includes('internship') || combinedText.includes('work') || (studentProfile.internships && studentProfile.internships.length > 0)) sectionPoints += 5;
+  if (combinedText.includes('project') || combinedText.includes('portfolio') || (studentProfile.projects && studentProfile.projects.length > 0)) sectionPoints += 5;
+  if (combinedText.includes('skill') || combinedText.includes('technology') || combinedText.includes('competencies') || (studentProfile.skills && studentProfile.skills.length > 0)) sectionPoints += 5;
 
-  if (studentProfile.projects && studentProfile.projects.length > 0) {
-    studentProfile.projects.forEach(project => {
-      const desc = (project.description || '').toLowerCase();
-      if (desc.length < 30) {
-        descriptionLengthCheck = false;
-      }
-      
-      // Match action verbs
-      ACTION_VERBS.forEach(verb => {
-        if (desc.includes(verb)) actionVerbCount++;
-      });
+  // D. Action Verbs & Quantifiable Impact Metrics (Max 15 pts)
+  let impactPoints = 0;
+  let actionVerbsFound = 0;
+  ACTION_VERBS.forEach(verb => {
+    if (combinedText.includes(verb)) actionVerbsFound++;
+  });
+  if (actionVerbsFound > 0) impactPoints += Math.min(actionVerbsFound * 2, 8);
+  else suggestions.push('Use active verbs ("Engineered", "Optimized", "Designed") at the start of project bullet points.');
 
-      // Match metrics (numbers, percent, time)
-      if (/\b\d+%\b|\b\d+\s*(ms|kb|mb|sec|users|clients|records|pages)\b|optimized|reduced|increased/i.test(desc)) {
-        metricCount++;
-      }
-    });
+  const metricMatches = (combinedText.match(/\b\d+%\b|\b\d+\s*(ms|kb|mb|sec|users|clients|records|pages)\b|optimized|reduced|increased/gi) || []).length;
+  if (metricMatches > 0) impactPoints += Math.min(metricMatches * 3, 7);
+  else suggestions.push('Include numerical impact metrics in project descriptions (e.g. "reduced latency by 30%").');
 
-    if (actionVerbCount > 0) projectPoints += Math.min(actionVerbCount * 3, 10);
-    else suggestions.push('Start project descriptions with active verbs (e.g. "Developed", "Optimized", "Engineered") instead of passive phrases.');
+  // E. Academic CGPA / Standing (Max 10 pts)
+  let academicPoints = 5;
+  if (studentProfile.cgpa >= 8.5) academicPoints = 10;
+  else if (studentProfile.cgpa >= 7.5) academicPoints = 8;
 
-    if (metricCount > 0) projectPoints += Math.min(metricCount * 5, 10);
-    else suggestions.push('Include quantifiable business metrics in project descriptions (e.g., "reduced latency by 20%", "integrated 5 APIs").');
+  // Final Heuristic ATS Calculation
+  const atsScore = Math.min(Math.round(contactPoints + skillPoints + sectionPoints + impactPoints + academicPoints), 100);
+  
+  // Formatting Score
+  let wordCount = combinedText.split(/\s+/).length;
+  let formattingScore = 70;
+  if (wordCount >= 80 && wordCount <= 800) formattingScore += 15;
+  if (hasEmail && hasPhone && (hasGithub || hasLinkedin)) formattingScore += 15;
+  formattingScore = Math.min(formattingScore, 100);
 
-    if (!descriptionLengthCheck) {
-      suggestions.push('Elaborate on your project descriptions. Provide a clear architectural outline of the project.');
-    }
-  } else {
-    suggestions.push('Add at least two technical projects to showcase your system architecture and coding style.');
-  }
-
-  // Calculate local ATS Compatibility Score
-  // Max possible: formattingPoints (30) + academicPoints (20) + skillsScore (30) + projectPoints (20) = 100
-  const localAtsScore = Math.min(Math.round(formattingPoints + academicPoints + skillsScore + projectPoints), 100);
-  const localScore = Math.round((localAtsScore + formattingScore) / 2);
+  const overallScore = Math.round((atsScore * 0.7) + (formattingScore * 0.3));
 
   let feedback = '';
-  if (localAtsScore >= 80) {
-    feedback = 'Excellent. Your profile has strong formatting, relevant links, solid project descriptions, and key industry technologies. Minor refinements will make it recruitment-ready.';
-  } else if (localAtsScore >= 60) {
-    feedback = 'Good progress. Your profile highlights solid foundational skills, but lacks quantitative metrics in projects and links to personal portfolios or source code repositories.';
+  if (atsScore >= 80) {
+    feedback = `Exceptional ATS Resume Match (${atsScore}%). Your resume contains strong section headers, contact credentials, and key tech stack keywords. Recruiter response probability is high.`;
+  } else if (atsScore >= 60) {
+    feedback = `Competitive ATS Match (${atsScore}%). Your profile covers fundamental core skills, but adding measurable metrics and missing tech keywords will boost recruiter ranking.`;
   } else {
-    feedback = 'Needs Improvement. Your profile lacks critical formatting links (GitHub, LinkedIn), core skills, and detailed project outlines. Refine descriptions and complete your profile fields.';
+    feedback = `ATS Optimization Required (${atsScore}%). Your resume lacks key technical keywords, contact links, or standard section headers. Follow the recommendations below to improve parsing.`;
   }
 
   const localAnalysis = {
-    score: localScore,
-    atsScore: localAtsScore,
+    score: overallScore,
+    atsScore: atsScore,
     formattingScore: formattingScore,
-    suggestions: suggestions.slice(0, 4),
-    missingSkills: missingSkills.slice(0, 3),
+    suggestions: suggestions.length > 0 ? suggestions.slice(0, 4) : ['Your resume formatting and ATS score are in excellent shape!'],
+    missingSkills: missingSkills.slice(0, 4),
+    detectedSkills: detectedSkills.slice(0, 8),
     feedback: feedback
   };
 
-  // Try calling Gemini for qualitative insights, blend results if successful
+  // Optional: Query Gemini if API key is active
   const prompt = `
-    Analyze this student profile for resume quality, ATS compatibility, and skills completeness.
-    Profile details:
-    Name: ${studentProfile.name}
-    Degree: ${studentProfile.degree}
-    Department: ${studentProfile.department}
-    CGPA: ${studentProfile.cgpa}
-    Skills: ${JSON.stringify(studentProfile.skills)}
-    Projects: ${JSON.stringify(studentProfile.projects)}
-    Internships: ${JSON.stringify(studentProfile.internships)}
-    Certifications: ${JSON.stringify(studentProfile.certifications)}
-
-    We have computed local heuristic metrics:
-    Local ATS Score: ${localAtsScore}
-    Local Formatting Score: ${formattingScore}
-
-    Analyze the profile details and return a refined JSON object matching this structure exactly (incorporate both local heuristics and your own advanced analysis):
+    Perform a strict ATS resume evaluation.
+    Parsed text details: ${combinedText.slice(0, 1500)}
+    Computed local metrics: ATS Score = ${atsScore}, Formatting = ${formattingScore}.
+    Return JSON format:
     {
       "score": number (0-100),
       "atsScore": number (0-100),
@@ -234,13 +246,18 @@ export const analyzeResume = async (studentProfile, pdfBase64 = null) => {
   `;
 
   try {
-    const aiResult = await callGemini(prompt, 'You are an elite ATS resume analyzer and career coach.', true, pdfBase64);
-    if (aiResult && typeof aiResult.atsScore === 'number') {
-      return aiResult;
+    const aiResult = await callGemini(prompt, 'You are an elite ATS resume scoring system.', true, pdfBase64);
+    if (aiResult && (typeof aiResult.atsScore === 'number' || typeof aiResult.score === 'number')) {
+      return {
+        ...aiResult,
+        atsScore: aiResult.atsScore ?? atsScore,
+        score: aiResult.score ?? overallScore,
+        formattingScore: aiResult.formattingScore ?? formattingScore,
+        detectedSkills: detectedSkills.slice(0, 8)
+      };
     }
     return localAnalysis;
   } catch (error) {
-    console.log('Gemini ATS analyzer fallback active. Returning local heuristic metrics.');
     return localAnalysis;
   }
 };
@@ -299,44 +316,32 @@ export const getChatbotResponse = async (role, userContext, userQuery, messageHi
   let contextString = '';
 
   if (role === 'STUDENT') {
-    roleInstruction = `You are the PlaceTrack AI Coordinator, an expert placement coordinator, mock interviewer, and technical career coach.
-Key Directives:
-1. ANSWER EVERY QUESTION: Be thorough, highly technical, and precise. Never decline to answer a placement, resume, or preparation query. When requested, write clean, production-ready, fully commented code (e.g. SQL queries, Python, C++, React components, Java).
-2. SKILLS-BASED INTERVIEW PREPARATION: Provide comprehensive mock interview questions, technical answers, and conceptual breakdowns based exactly on the student's skills, projects, and target companies.
-3. CONTEXT-AWARE MOCKS: Leverage the student's CGPA, projects, internships, and certifications to ask custom mock interview questions (e.g., asking how they designed their projects, optimization tactics, or how to explain their internships using the STAR method).
-4. INTERACTIVE ASSISTANT: Offer to run a mock coding or behavioral interview right in the chat room. Prompt the user to start a session by typing 'Start Mock Practice' and ask questions one-by-one, providing instant feedback and correct solution grades.`;
+    roleInstruction = `You are PlaceTrack AI Coordinator, a smart campus placement assistant.
+Directives:
+1. KEEP RESPONSES VERY SHORT, CONCISE, AND FLEXIBLE. Maximum 2 to 4 bullet points or 2-3 short sentences (under 75 words).
+2. Format cleanly using Markdown with bold keywords. Avoid long essays, walls of text, or verbose introductions.
+3. Be actionable, precise, and direct.`;
     contextString = `Student Profile:
 Name: ${userContext.name}
 CGPA: ${userContext.cgpa}
 Department: ${userContext.department}
 Skills: ${JSON.stringify(userContext.skills || [])}
 Projects: ${JSON.stringify(userContext.projects || [])}
-Internships: ${JSON.stringify(userContext.internships || [])}
-Certifications: ${JSON.stringify(userContext.certifications || [])}
 Eligible Drives: ${JSON.stringify(userContext.drives || [])}
 My Applications: ${JSON.stringify(userContext.applications || [])}`;
   } else if (role === 'COMPANY') {
-    roleInstruction = 'You are PlaceTrack Recruiter Coach, an expert recruiter assistant. Help HR panels write appealing job descriptions, design optimal selection stages, assess candidate scores, and schedule virtual interviews.';
-    contextString = `Recruiter Profile:
-Company: ${userContext.name}
-Industry: ${userContext.industry}
-Jobs Posted: ${JSON.stringify(userContext.jobs || [])}`;
+    roleInstruction = 'You are PlaceTrack Recruiter Coach. Provide concise, 2-3 bullet point answers helping HR panels schedule interviews and post jobs.';
+    contextString = `Recruiter Profile: Name: ${userContext.name}, Jobs: ${JSON.stringify(userContext.jobs || [])}`;
   } else if (role === 'PLACEMENT_MANAGER') {
-    roleInstruction = 'You are PlaceTrack Coordinators Advisor, a smart placement office assistant. Help managers verify corporate registration applications, track institute placement rates, audit student marks, and schedule drives.';
-    contextString = `Placement Statistics:
-Placed Students: ${userContext.placedStudents}
-Placement Rate: ${userContext.placementRate}%
-Average Salary: ${userContext.averagePackage} LPA`;
+    roleInstruction = 'You are PlaceTrack Coordinator Advisor. Provide short 2-3 bullet point summaries on placement statistics and drives.';
+    contextString = `Placement Rate: ${userContext.placementRate}%, Avg CTC: ${userContext.averagePackage} LPA`;
   } else {
-    roleInstruction = 'You are PlaceTrack Systems Admin Assistant. Help administrative operators manage database logins, toggle accounts active/suspended, set up academic departments, and audit system event logs.';
-    contextString = `Admin Context:
-Total Logins: ${userContext.totalUsers}
-Students: ${userContext.studentsCount}
-Companies: ${userContext.companiesCount}`;
+    roleInstruction = 'You are PlaceTrack Admin Assistant. Provide brief 2-3 sentence guidance on user accounts and system configuration.';
+    contextString = `Total Users: ${userContext.totalUsers}`;
   }
 
   const prompt = `
-    Role Context:
+    Context:
     ${contextString}
 
     Chat History:
@@ -344,7 +349,7 @@ Companies: ${userContext.companiesCount}`;
 
     User Query: ${userQuery}
 
-    Provide a direct, conversational, supportive, and professional response. Do not output JSON.
+    CRITICAL INSTRUCTION: Provide a SHORT, CONCISE, bulleted response (max 75 words). Do not write long paragraphs or lengthy essays.
   `;
 
   try {

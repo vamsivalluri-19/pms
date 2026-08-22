@@ -215,14 +215,14 @@ const StudentApplications = () => {
             <EmptyState title="No results recorded" message="Rounds results scorecards will display here once evaluators grade sheets." />
           ) : (
             <div className="overflow-hidden border border-slate-50 rounded-xl text-xs">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider">
+              <table className="w-full text-xs text-left align-middle">
+                <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider whitespace-nowrap">
                   <tr>
-                    <th className="px-6 py-3.5">Company</th>
-                    <th className="px-6 py-3.5">Job Role</th>
-                    <th className="px-6 py-3.5">Latest Round</th>
-                    <th className="px-6 py-3.5">Round Status</th>
-                    <th className="px-6 py-3.5 text-right">Application Stage</th>
+                    <th className="px-6 py-3.5 whitespace-nowrap">Company</th>
+                    <th className="px-6 py-3.5 whitespace-nowrap">Job Role</th>
+                    <th className="px-6 py-3.5 whitespace-nowrap">Latest Round</th>
+                    <th className="px-6 py-3.5 whitespace-nowrap">Round Status</th>
+                    <th className="px-6 py-3.5 text-right whitespace-nowrap">Application Stage</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">

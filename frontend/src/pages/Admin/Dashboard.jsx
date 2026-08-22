@@ -15,7 +15,19 @@ import {
   UserX,
   Trash2,
   PlusCircle,
-  BookOpen
+  BookOpen,
+  Save,
+  Database,
+  Lock,
+  Bell,
+  Server,
+  RefreshCw,
+  AlertTriangle,
+  CheckCircle2,
+  ShieldAlert,
+  Sliders,
+  Globe,
+  Award
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -81,6 +93,28 @@ const AdminDashboard = () => {
   const [startYearVal, setStartYearVal] = useState('');
   const [endYearVal, setEndYearVal] = useState('');
 
+  // System Settings State
+  const [sysSettings, setSysSettings] = useState({
+    institutionName: 'PlaceTrack Institutional Control Centre',
+    adminEmail: 'admin@institution.edu',
+    allowStudentRegistration: true,
+    allowRecruiterRegistration: true,
+    requireRecruiterApproval: true,
+    sessionTimeoutMinutes: 60,
+    maxLoginAttempts: 5,
+    enable2FA: false,
+    strictPasswordPolicy: true,
+    emailNotificationsEnabled: true,
+    systemAnnouncement: 'Placement Drive Season 2026 is active. Ensure all student profiles are updated.',
+    minCgpaDefault: 6.5,
+    maxBacklogsDefault: 0,
+    maxOffersPerStudent: 2,
+    autoBackupSchedule: 'Daily (02:00 AM)',
+    maintenanceMode: false
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [maintActionLoading, setMaintActionLoading] = useState(null);
+
   const fetchAdminData = async () => {
     try {
       const statsRes = await api.get('/stats/admin');
@@ -107,6 +141,16 @@ const AdminDashboard = () => {
           courses: academicRes.data.courses,
           batches: academicRes.data.batches
         });
+      }
+
+      // Fetch system settings
+      try {
+        const settingsRes = await api.get('/system-settings');
+        if (settingsRes.data.success && settingsRes.data.settings) {
+          setSysSettings(settingsRes.data.settings);
+        }
+      } catch (sErr) {
+        console.error('Error fetching settings:', sErr);
       }
 
       // Fetch jobs
@@ -208,6 +252,49 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleSaveSystemSettings = async (e) => {
+    if (e) e.preventDefault();
+    setSavingSettings(true);
+    try {
+      const { data } = await api.put('/system-settings', sysSettings);
+      if (data.success) {
+        alert('Global System Settings updated and applied across all modules!');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update system settings');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const handlePurgeCache = async () => {
+    setMaintActionLoading('cache');
+    try {
+      const { data } = await api.post('/system-settings/clear-cache');
+      if (data.success) {
+        alert(data.message);
+      }
+    } catch (err) {
+      alert('Failed to purge system cache');
+    } finally {
+      setMaintActionLoading(null);
+    }
+  };
+
+  const handleTriggerBackup = async () => {
+    setMaintActionLoading('backup');
+    try {
+      const { data } = await api.post('/system-settings/backup');
+      if (data.success) {
+        alert(data.message);
+      }
+    } catch (err) {
+      alert('Failed to execute database backup');
+    } finally {
+      setMaintActionLoading(null);
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -297,17 +384,17 @@ const AdminDashboard = () => {
               <h3 className="text-sm font-bold text-slate-800 font-display">Chronological Audit Registry</h3>
             </div>
 
-            <div className="overflow-hidden border border-slate-50 rounded-xl">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider">
+            <div className="overflow-x-auto border border-slate-100 rounded-xl">
+              <div className="w-full">
+                <table className="w-full text-xs text-left align-middle">
+                  <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider whitespace-nowrap">
                     <tr>
-                      <th className="px-6 py-3.5">Timestamp</th>
-                      <th className="px-6 py-3.5">Operator</th>
-                      <th className="px-6 py-3.5">Role</th>
-                      <th className="px-6 py-3.5">Action</th>
-                      <th className="px-6 py-3.5">Entity / ID</th>
-                      <th className="px-6 py-3.5 text-right">IP Address</th>
+                      <th className="px-6 py-3.5 whitespace-nowrap">Timestamp</th>
+                      <th className="px-6 py-3.5 whitespace-nowrap">Operator</th>
+                      <th className="px-6 py-3.5 whitespace-nowrap">Role</th>
+                      <th className="px-6 py-3.5 whitespace-nowrap">Action</th>
+                      <th className="px-6 py-3.5 whitespace-nowrap">Entity / ID</th>
+                      <th className="px-6 py-3.5 text-right whitespace-nowrap">IP Address</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
@@ -344,16 +431,16 @@ const AdminDashboard = () => {
       {activeTab === 'users' && (
         <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-6">
           <h3 className="text-sm font-bold text-slate-800 font-display">{getUserTabTitle()} Manager</h3>
-          <div className="overflow-hidden border border-slate-50 rounded-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider">
+          <div className="overflow-x-auto border border-slate-100 rounded-xl">
+            <div className="w-full">
+              <table className="w-full text-xs text-left align-middle">
+                <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider whitespace-nowrap">
                   <tr>
-                    <th className="px-6 py-3.5">Email</th>
-                    <th className="px-6 py-3.5">Role</th>
-                    <th className="px-6 py-3.5">Status</th>
-                    <th className="px-6 py-3.5">Created Date</th>
-                    <th className="px-6 py-3.5 text-right">Actions</th>
+                    <th className="px-6 py-3.5 whitespace-nowrap">Email</th>
+                    <th className="px-6 py-3.5 whitespace-nowrap">Role</th>
+                    <th className="px-6 py-3.5 whitespace-nowrap">Status</th>
+                    <th className="px-6 py-3.5 whitespace-nowrap">Created Date</th>
+                    <th className="px-6 py-3.5 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -578,14 +665,14 @@ const AdminDashboard = () => {
       {activeTab === 'audit-logs' && (
         <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-6 text-xs text-left">
           <h3 className="text-sm font-bold text-slate-800 font-display">Chronological Audit Registry</h3>
-          <div className="overflow-hidden border border-slate-50 rounded-xl">
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider">
+          <div className="overflow-x-auto border border-slate-100 rounded-xl">
+            <table className="w-full text-xs text-left align-middle">
+              <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider whitespace-nowrap">
                 <tr>
-                  <th className="px-6 py-3.5">Action</th>
-                  <th className="px-6 py-3.5">Operator</th>
-                  <th className="px-6 py-3.5">Entity</th>
-                  <th className="px-6 py-3.5 text-right">Date & Time</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap">Action</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap">Operator</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap">Entity</th>
+                  <th className="px-6 py-3.5 text-right whitespace-nowrap">Date & Time</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -610,27 +697,320 @@ const AdminDashboard = () => {
       )}
 
       {activeTab === 'settings' && (
-        <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-6 text-xs text-left">
-          <h3 className="text-sm font-bold text-slate-800 font-display">Administrative Global Settings</h3>
-          <div className="p-4 border border-blue-100 bg-blue-50/20 rounded-xl text-slate-600 leading-relaxed">
-            <p className="font-bold text-blue-800 mb-1">Global System Parameters</p>
-            Configure authentication permissions, account verification checks, and automated database backups schedule.
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-2">
-              <label className="font-bold text-slate-700">Allow Student Registrations</label>
-              <input type="text" className="p-2.5 border border-slate-200 rounded-xl bg-slate-50" defaultValue="Yes (Open)" disabled />
+        <form onSubmit={handleSaveSystemSettings} className="flex flex-col gap-6 text-xs text-left animate-page-enter">
+          {/* Header Action Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-100 p-6 rounded-2xl shadow-xs">
+            <div>
+              <h3 className="text-base font-bold text-slate-800 font-display flex items-center gap-2">
+                <Sliders size={20} className="text-amber-500" />
+                Administrative Global Control Panel
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5 font-medium">Manage institutional parameters, security policies, placement criteria defaults, and database maintenance.</p>
             </div>
-            <div className="flex flex-col gap-2">
-              <label className="font-bold text-slate-700">Recruiter Approval Policy</label>
-              <input type="text" className="p-2.5 border border-slate-200 rounded-xl bg-slate-50" defaultValue="Manual Coordinator Review" disabled />
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={savingSettings}
+              className="bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-500/20 py-2.5 px-5 flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <Save size={16} />
+              {savingSettings ? 'Saving Changes...' : 'Save System Settings'}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Card 1: Institution & Portal Identity */}
+            <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-5">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+                <Globe size={18} className="text-blue-500" />
+                <h4 className="font-bold text-slate-800 font-display text-sm">Portal & Institution Identity</h4>
+              </div>
+
+              <Input
+                label="Institution / Organization Title"
+                value={sysSettings.institutionName || ''}
+                onChange={(e) => setSysSettings({ ...sysSettings, institutionName: e.target.value })}
+                placeholder="e.g. PlaceTrack Institutional Control Centre"
+                required
+              />
+
+              <Input
+                label="Primary System Admin Email"
+                type="email"
+                value={sysSettings.adminEmail || ''}
+                onChange={(e) => setSysSettings({ ...sysSettings, adminEmail: e.target.value })}
+                placeholder="e.g. admin@institution.edu"
+                required
+              />
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 font-display">System Broadcast Announcement</label>
+                <textarea
+                  className="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/5 transition-all text-slate-800"
+                  rows="3"
+                  value={sysSettings.systemAnnouncement || ''}
+                  onChange={(e) => setSysSettings({ ...sysSettings, systemAnnouncement: e.target.value })}
+                  placeholder="Banner notification message displayed to users across dashboards..."
+                />
+              </div>
+            </div>
+
+            {/* Card 2: Account Access & Onboarding Policy */}
+            <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-5">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+                <UserCheck size={18} className="text-emerald-500" />
+                <h4 className="font-bold text-slate-800 font-display text-sm">User Access & Registration Control</h4>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                <div>
+                  <span className="font-bold text-slate-800 block">Student Self-Registration</span>
+                  <span className="text-[11px] text-slate-400">Allow prospective students to create placement portal accounts</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={sysSettings.allowStudentRegistration || false}
+                    onChange={(e) => setSysSettings({ ...sysSettings, allowStudentRegistration: e.target.checked })}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                <div>
+                  <span className="font-bold text-slate-800 block">Recruiter Self-Registration</span>
+                  <span className="text-[11px] text-slate-400">Allow corporate HRs to register company profiles</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={sysSettings.allowRecruiterRegistration || false}
+                    onChange={(e) => setSysSettings({ ...sysSettings, allowRecruiterRegistration: e.target.checked })}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                <div>
+                  <span className="font-bold text-slate-800 block">Require Recruiter Account Verification</span>
+                  <span className="text-[11px] text-slate-400">Placement Manager must approve recruiter before job creation</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={sysSettings.requireRecruiterApproval || false}
+                    onChange={(e) => setSysSettings({ ...sysSettings, requireRecruiterApproval: e.target.checked })}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+            </div>
+
+            {/* Card 3: Security & Governance */}
+            <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-5">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+                <Lock size={18} className="text-violet-500" />
+                <h4 className="font-bold text-slate-800 font-display text-sm">Security & Authentication Governance</h4>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Select
+                  label="Session Timeout"
+                  options={[
+                    { value: 15, label: '15 Minutes' },
+                    { value: 30, label: '30 Minutes' },
+                    { value: 60, label: '1 Hour' },
+                    { value: 720, label: '12 Hours' }
+                  ]}
+                  value={sysSettings.sessionTimeoutMinutes || 60}
+                  onChange={(e) => setSysSettings({ ...sysSettings, sessionTimeoutMinutes: parseInt(e.target.value) })}
+                />
+
+                <Select
+                  label="Max Failed Login Attempts"
+                  options={[
+                    { value: 3, label: '3 Attempts' },
+                    { value: 5, label: '5 Attempts' },
+                    { value: 10, label: '10 Attempts' }
+                  ]}
+                  value={sysSettings.maxLoginAttempts || 5}
+                  onChange={(e) => setSysSettings({ ...sysSettings, maxLoginAttempts: parseInt(e.target.value) })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                <div>
+                  <span className="font-bold text-slate-800 block">Strict Password Complexity</span>
+                  <span className="text-[11px] text-slate-400">Require uppercase, numbers, and special characters</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={sysSettings.strictPasswordPolicy || false}
+                    onChange={(e) => setSysSettings({ ...sysSettings, strictPasswordPolicy: e.target.checked })}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                <div>
+                  <span className="font-bold text-slate-800 block">Enforce 2FA Authentication</span>
+                  <span className="text-[11px] text-slate-400">Mandate OTP verification for Placement Managers & Admins</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={sysSettings.enable2FA || false}
+                    onChange={(e) => setSysSettings({ ...sysSettings, enable2FA: e.target.checked })}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                </label>
+              </div>
+            </div>
+
+            {/* Card 4: Placement Policy Defaults */}
+            <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-5">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+                <Award size={18} className="text-amber-500" />
+                <h4 className="font-bold text-slate-800 font-display text-sm">Placement Eligibility Criteria Defaults</h4>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <Input
+                  label="Default Min CGPA"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="10"
+                  value={sysSettings.minCgpaDefault || 6.5}
+                  onChange={(e) => setSysSettings({ ...sysSettings, minCgpaDefault: parseFloat(e.target.value) || 0 })}
+                />
+                <Input
+                  label="Default Max Backlogs"
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={sysSettings.maxBacklogsDefault ?? 0}
+                  onChange={(e) => setSysSettings({ ...sysSettings, maxBacklogsDefault: parseInt(e.target.value) || 0 })}
+                />
+                <Input
+                  label="Max Offers / Student"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={sysSettings.maxOffersPerStudent || 2}
+                  onChange={(e) => setSysSettings({ ...sysSettings, maxOffersPerStudent: parseInt(e.target.value) || 1 })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                <div>
+                  <span className="font-bold text-slate-800 block">Automated Email Dispatch</span>
+                  <span className="text-[11px] text-slate-400">Send instant notification emails on new drive approvals</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={sysSettings.emailNotificationsEnabled || false}
+                    onChange={(e) => setSysSettings({ ...sysSettings, emailNotificationsEnabled: e.target.checked })}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                </label>
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* Card 5: Maintenance & System Operations */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Database size={18} className="text-teal-600" />
+                <h4 className="font-bold text-slate-800 font-display text-sm">System Operations & Maintenance</h4>
+              </div>
+              <Badge status="success" className="gap-1 font-mono">
+                <CheckCircle2 size={12} /> MongoDB Engine: ONLINE
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              <Select
+                label="Automated Database Backup Frequency"
+                options={[
+                  { value: 'Daily (02:00 AM)', label: 'Daily (02:00 AM)' },
+                  { value: 'Weekly (Sunday)', label: 'Weekly (Sunday)' },
+                  { value: 'Monthly', label: 'Monthly' },
+                  { value: 'Disabled', label: 'Disabled' }
+                ]}
+                value={sysSettings.autoBackupSchedule || 'Daily (02:00 AM)'}
+                onChange={(e) => setSysSettings({ ...sysSettings, autoBackupSchedule: e.target.value })}
+              />
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-slate-600 font-display">System Cache & Indexes</label>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handlePurgeCache}
+                  disabled={maintActionLoading === 'cache'}
+                  className="py-2.5 text-xs flex items-center justify-center gap-2 text-slate-700 cursor-pointer"
+                >
+                  <RefreshCw size={14} className={maintActionLoading === 'cache' ? 'animate-spin' : ''} />
+                  {maintActionLoading === 'cache' ? 'Purging Cache...' : 'Purge Session Cache'}
+                </Button>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-slate-600 font-display">Manual Database Snapshot</label>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleTriggerBackup}
+                  disabled={maintActionLoading === 'backup'}
+                  className="py-2.5 text-xs flex items-center justify-center gap-2 text-teal-700 border-teal-200 bg-teal-50/50 hover:bg-teal-100 cursor-pointer"
+                >
+                  <Server size={14} />
+                  {maintActionLoading === 'backup' ? 'Creating Snapshot...' : 'Run Backup Snapshot'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Maintenance Mode Emergency Alert */}
+            <div className={`p-4 rounded-xl border flex items-center justify-between transition-all ${
+              sysSettings.maintenanceMode ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-slate-50 border-slate-200 text-slate-600'
+            }`}>
+              <div className="flex items-center gap-3">
+                <ShieldAlert size={22} className={sysSettings.maintenanceMode ? 'text-rose-600 animate-pulse' : 'text-slate-400'} />
+                <div>
+                  <span className="font-bold text-xs block">Emergency Portal Maintenance Mode</span>
+                  <span className="text-[11px] opacity-80">Restricts student and recruiter logins while performing critical DB maintenance.</span>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={sysSettings.maintenanceMode || false}
+                  onChange={(e) => setSysSettings({ ...sysSettings, maintenanceMode: e.target.checked })}
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+              </label>
+            </div>
+          </div>
+        </form>
       )}
     </div>
   );
 };
 
 export default AdminDashboard;
+
 //

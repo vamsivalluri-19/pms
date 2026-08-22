@@ -503,12 +503,12 @@ const ManagerDashboard = () => {
               <div className="p-5 bg-white border border-slate-100 rounded-2xl shadow-xs flex flex-col gap-3">
                 <h3 className="text-xs font-bold text-slate-700 font-display uppercase tracking-wider">Recent Offers Log</h3>
                 <div className="overflow-hidden border border-slate-50 rounded-xl text-[10px]">
-                  <table className="w-full text-left">
-                    <thead className="bg-slate-50 text-slate-400 font-bold border-b border-slate-100 uppercase tracking-wider">
+                  <table className="w-full text-xs text-left align-middle">
+                    <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider whitespace-nowrap">
                       <tr>
-                        <th className="px-3 py-2">Student</th>
-                        <th className="px-3 py-2">Company</th>
-                        <th className="px-3 py-2 text-right">Package</th>
+                        <th className="px-3 py-2 whitespace-nowrap">Student</th>
+                        <th className="px-3 py-2 whitespace-nowrap">Company</th>
+                        <th className="px-3 py-2 text-right whitespace-nowrap">Package</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -635,14 +635,14 @@ const ManagerDashboard = () => {
         <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-6">
           <h3 className="text-sm font-bold text-slate-800 font-display mb-2">Campus Interviews Schedule</h3>
           <div className="overflow-hidden border border-slate-50 rounded-xl text-xs">
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider">
+            <table className="w-full text-xs text-left align-middle">
+              <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider whitespace-nowrap">
                 <tr>
-                  <th className="px-6 py-3.5">Candidate</th>
-                  <th className="px-6 py-3.5">Company</th>
-                  <th className="px-6 py-3.5">Interviewer</th>
-                  <th className="px-6 py-3.5">Mode / Link</th>
-                  <th className="px-6 py-3.5 text-right">Date & Time</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap">Candidate</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap">Company</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap">Interviewer</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap">Mode / Link</th>
+                  <th className="px-6 py-3.5 text-right whitespace-nowrap">Date & Time</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">

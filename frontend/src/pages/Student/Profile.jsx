@@ -91,10 +91,26 @@ const StudentProfile = () => {
   // Skill states
   const [skillsText, setSkillsText] = useState(profile?.skills?.join(', ') || '');
 
-  // File Upload states
+  // File Upload & ATS Analysis states
   const [resumeFile, setResumeFile] = useState(null);
   const [documentFile, setDocumentFile] = useState(null);
   const [docName, setDocName] = useState('10th Certificate');
+  const [atsAnalysis, setAtsAnalysis] = useState(null);
+  const [analyzingAts, setAnalyzingAts] = useState(false);
+
+  const handleAnalyzeResume = async () => {
+    setAnalyzingAts(true);
+    try {
+      const { data } = await api.get('/ai/resume-analyzer');
+      if (data.success) {
+        setAtsAnalysis(data.analysis);
+      }
+    } catch (err) {
+      setAlert({ type: 'danger', msg: 'ATS evaluation failed to calculate.' });
+    } finally {
+      setAnalyzingAts(false);
+    }
+  };
 
   // ATS Resume Builder States
   const [selectedTemplate, setSelectedTemplate] = useState('classic');
@@ -503,23 +519,108 @@ const StudentProfile = () => {
               <h3 className="text-sm font-bold text-slate-800 font-display mb-2">Resume Management</h3>
               
               {profile?.resume?.fileUrl ? (
-                <div className="p-4 border border-slate-100 rounded-xl bg-slate-50 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-bold text-slate-800 font-display">{profile.resume.fileName}</p>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                      Uploaded on: {new Date(profile.resume.uploadDate).toLocaleDateString()} • Version: v{profile.resume.version}
-                    </p>
+                <div className="flex flex-col gap-4">
+                  <div className="p-4 border border-slate-100 rounded-xl bg-slate-50 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 font-display">{profile.resume.fileName}</p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                        Uploaded on: {new Date(profile.resume.uploadDate).toLocaleDateString()} • Version: v{profile.resume.version}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="secondary" size="sm" onClick={handleAnalyzeResume} disabled={analyzingAts} className="gap-1 text-xs">
+                        <Sparkles size={14} className="text-violet-500" />
+                        {analyzingAts ? 'Calculating ATS...' : 'Run ATS Evaluation'}
+                      </Button>
+                      <a
+                        href={getUploadUrl(profile.resume.fileUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-slate-500 hover:text-primary-500 hover:bg-white rounded-lg transition-colors border border-slate-100 shadow-sm"
+                      >
+                        <Download size={16} />
+                      </a>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <a
-                      href={getUploadUrl(profile.resume.fileUrl)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 text-slate-500 hover:text-primary-500 hover:bg-white rounded-lg transition-colors border border-slate-100 shadow-sm"
-                    >
-                      <Download size={16} />
-                    </a>
-                  </div>
+
+                  {/* ATS Results Breakdown Box */}
+                  {atsAnalysis && (
+                    <div className="p-5 border border-violet-100 bg-violet-50/20 rounded-2xl flex flex-col gap-4 text-xs">
+                      <div className="flex items-center justify-between border-b border-violet-100/60 pb-3">
+                        <span className="font-bold text-slate-800 font-display flex items-center gap-2">
+                          <Sparkles size={16} className="text-violet-500" />
+                          ATS Evaluation Score Card
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-semibold uppercase">Real-time PDF Scan</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <div className="p-3 bg-white border border-slate-100 rounded-xl text-center">
+                          <span className={`text-2xl font-black font-display ${
+                            (atsAnalysis.atsScore ?? atsAnalysis.score) >= 80 ? 'text-emerald-600' :
+                            (atsAnalysis.atsScore ?? atsAnalysis.score) >= 60 ? 'text-amber-600' : 'text-rose-600'
+                          }`}>
+                            {atsAnalysis.atsScore ?? atsAnalysis.score}%
+                          </span>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">ATS Match Score</p>
+                        </div>
+                        <div className="p-3 bg-white border border-slate-100 rounded-xl text-center">
+                          <span className="text-2xl font-black text-slate-800 font-display">{atsAnalysis.formattingScore || 85}%</span>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Formatting Score</p>
+                        </div>
+                        <div className="p-3 bg-white border border-slate-100 rounded-xl text-center col-span-2 sm:col-span-1">
+                          <span className="text-2xl font-black text-slate-800 font-display">{atsAnalysis.score}%</span>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Overall Profile Score</p>
+                        </div>
+                      </div>
+
+                      {atsAnalysis.feedback && (
+                        <p className="text-[11px] text-slate-600 italic bg-white p-3 rounded-xl border border-slate-100">
+                          "{atsAnalysis.feedback}"
+                        </p>
+                      )}
+
+                      {atsAnalysis.detectedSkills && atsAnalysis.detectedSkills.length > 0 && (
+                        <div>
+                          <p className="font-bold text-slate-700 mb-1.5 font-display">Detected Tech Keywords</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {atsAnalysis.detectedSkills.map((sk, idx) => (
+                              <span key={idx} className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-md border border-emerald-100">
+                                {sk}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {atsAnalysis.missingSkills && atsAnalysis.missingSkills.length > 0 && (
+                        <div>
+                          <p className="font-bold text-slate-700 mb-1.5 font-display">Recommended Tech to Add</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {atsAnalysis.missingSkills.map((sk, idx) => (
+                              <span key={idx} className="text-[10px] bg-rose-50 text-rose-600 font-bold px-2 py-0.5 rounded-md border border-rose-100">
+                                + {sk}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {atsAnalysis.suggestions && atsAnalysis.suggestions.length > 0 && (
+                        <div>
+                          <p className="font-bold text-slate-700 mb-1.5 font-display">Key Recommendations</p>
+                          <ul className="flex flex-col gap-1.5 text-slate-500">
+                            {atsAnalysis.suggestions.map((s, idx) => (
+                              <li key={idx} className="flex gap-2 items-start">
+                                <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                                <span>{s}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="p-6 border border-dashed border-slate-200 rounded-xl text-center flex flex-col items-center justify-center gap-3">
@@ -817,14 +918,14 @@ const StudentProfile = () => {
               <h3 className="text-sm font-bold text-slate-800 font-display mb-2">Document Verification</h3>
               
               {/* Document Lists Table */}
-              <div className="overflow-hidden border border-slate-100 rounded-xl">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 font-bold text-slate-600 border-b border-slate-100">
+              <div className="overflow-x-auto border border-slate-100 rounded-xl">
+                <table className="w-full text-xs text-left align-middle">
+                  <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider whitespace-nowrap">
                     <tr>
-                      <th className="px-6 py-3.5">Document Name</th>
-                      <th className="px-6 py-3.5">Status</th>
-                      <th className="px-6 py-3.5">Remarks</th>
-                      <th className="px-6 py-3.5 text-right">Action</th>
+                      <th className="px-6 py-3.5 whitespace-nowrap">Document Name</th>
+                      <th className="px-6 py-3.5 whitespace-nowrap">Status</th>
+                      <th className="px-6 py-3.5 whitespace-nowrap">Remarks</th>
+                      <th className="px-6 py-3.5 text-right whitespace-nowrap">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">

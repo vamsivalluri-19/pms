@@ -38,6 +38,14 @@ html {
   scrollbar-gutter: stable;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -80,9 +88,32 @@ body {
   font-family: var(--font-sans);
   background-color: #f4f7fb;
   color: #1e293b;
+  margin: 0;
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
   scrollbar-gutter: stable;
+}
+
+.app-shell,
+.app-shell > div,
+.app-shell main,
+.app-shell main > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app-shell main {
+  overflow-x: hidden;
+}
+
+.app-shell table {
+  width: 100%;
+  max-width: 100%;
+}
+
+.app-shell th,
+.app-shell td {
+  overflow-wrap: anywhere;
 }
 
 /* Shared product surface: used by dashboards, profiles and management screens. */
@@ -179,6 +210,38 @@ html:not(.dark) .auth-shell textarea::placeholder {
 @keyframes page-reveal { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    font-size: 14px;
+  }
+
+  .workspace-hero {
+    min-height: 160px;
+    border-radius: 20px;
+    padding: 1.1rem;
+  }
+
+  .workspace-hero h1 {
+    font-size: clamp(1.3rem, 4.8vw, 1.9rem) !important;
+  }
+
+  .workspace-hero p {
+    font-size: clamp(0.8rem, 2.9vw, 0.95rem);
+  }
+
+  .workspace-hero-tag,
+  .workspace-hero-page {
+    padding: 0.42rem 0.65rem;
+    font-size: 9px;
+  }
 }
 
 h1, h2, h3, h4, h5, h6 {

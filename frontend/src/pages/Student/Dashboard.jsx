@@ -101,6 +101,23 @@ const StudentDashboard = () => {
 
   if (loading) return <LoadingSpinner />;
 
+  // Helper for quick assistant prompt shortcuts
+  const sendQuickPrompt = async (promptText) => {
+    const userMsg = { sender: 'USER', content: promptText };
+    setChatMessages((prev) => [...prev, userMsg]);
+    setChatLoading(true);
+    try {
+      const { data } = await api.post('/ai/chatbot', { query: promptText });
+      if (data.success) {
+        setChatMessages((prev) => [...prev, { sender: 'AI', content: data.reply }]);
+      }
+    } catch (err) {
+      setChatMessages((prev) => [...prev, { sender: 'AI', content: 'Apologies, I encountered an issue. Please try again.' }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-8 relative">
       {/* Placement celebration banner */}
@@ -200,29 +217,67 @@ const StudentDashboard = () => {
             </p>
 
             {resumeAnalysis ? (
-              <div className="mt-6 flex flex-col gap-5">
+              <div className="mt-5 flex flex-col gap-4">
                 {profile?.resume?.fileName && (
-                  <p className="text-[10px] bg-slate-50 text-slate-500 font-semibold px-3 py-1.5 rounded-lg border border-slate-100 w-fit">
-                    Analyzed: {profile.resume.fileName}
+                  <p className="text-[10px] bg-slate-50 text-slate-600 font-semibold px-3 py-1.5 rounded-lg border border-slate-100 w-fit">
+                    Active Resume: {profile.resume.fileName}
                   </p>
                 )}
-                <div className="flex items-center justify-around py-2">
+
+                <div className="flex items-center justify-around py-3 bg-slate-50 border border-slate-100 rounded-xl">
                   <div className="text-center">
-                    <span className="text-3xl font-black text-slate-800 font-display">{resumeAnalysis.score}</span>
-                    <p className="text-[10px] text-slate-400 font-bold">ATS Score</p>
+                    <span className={`text-3xl font-black font-display ${
+                      (resumeAnalysis.atsScore ?? resumeAnalysis.score) >= 80 ? 'text-emerald-600' :
+                      (resumeAnalysis.atsScore ?? resumeAnalysis.score) >= 60 ? 'text-amber-600' : 'text-rose-600'
+                    }`}>
+                      {resumeAnalysis.atsScore ?? resumeAnalysis.score}%
+                    </span>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">ATS Match</p>
                   </div>
-                  <div className="h-8 border-r border-slate-100"></div>
+                  <div className="h-9 border-r border-slate-200"></div>
                   <div className="text-center">
-                    <span className="text-3xl font-black text-slate-800 font-display">{resumeAnalysis.formattingScore}</span>
-                    <p className="text-[10px] text-slate-400 font-bold">Formatting</p>
+                    <span className="text-3xl font-black text-slate-800 font-display">{resumeAnalysis.formattingScore || 85}%</span>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Formatting</p>
                   </div>
                 </div>
 
+                {resumeAnalysis.feedback && (
+                  <p className="text-[11px] text-slate-600 leading-relaxed italic bg-violet-50/50 p-3 rounded-xl border border-violet-100/60">
+                    "{resumeAnalysis.feedback}"
+                  </p>
+                )}
+
+                {resumeAnalysis.detectedSkills && resumeAnalysis.detectedSkills.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-bold text-slate-700 mb-1.5 font-display">Detected Tech Keywords</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {resumeAnalysis.detectedSkills.map((sk, idx) => (
+                        <span key={idx} className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-md border border-emerald-100">
+                          {sk}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {resumeAnalysis.missingSkills && resumeAnalysis.missingSkills.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-bold text-slate-700 mb-1.5 font-display">Missing Skills to Add</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {resumeAnalysis.missingSkills.map((sk, idx) => (
+                        <span key={idx} className="text-[10px] bg-rose-50 text-rose-600 font-bold px-2 py-0.5 rounded-md border border-rose-100">
+                          + {sk}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="text-xs">
-                  <p className="font-bold text-slate-700 mb-2">Recommendations</p>
+                  <p className="font-bold text-slate-700 mb-2 font-display">Actionable Improvements</p>
                   <ul className="flex flex-col gap-2">
-                    {resumeAnalysis.suggestions.slice(0, 2).map((s, idx) => (
-                      <li key={idx} className="flex gap-2 text-slate-500 leading-normal">
+                    {resumeAnalysis.suggestions.slice(0, 3).map((s, idx) => (
+                      <li key={idx} className="flex gap-2 text-slate-500 leading-normal text-[11px]">
                         <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
                         {s}
                       </li>
@@ -230,8 +285,8 @@ const StudentDashboard = () => {
                   </ul>
                 </div>
 
-                <Button variant="secondary" size="sm" onClick={handleAnalyzeResume} disabled={analyzing}>
-                  {analyzing ? 'Recalculating...' : 'Re-Analyze Resume'}
+                <Button variant="secondary" size="sm" onClick={handleAnalyzeResume} disabled={analyzing} className="mt-1">
+                  {analyzing ? 'Recalculating...' : 'Re-Run ATS Evaluation'}
                 </Button>
               </div>
             ) : !profile?.resume?.fileUrl ? (
@@ -258,7 +313,7 @@ const StudentDashboard = () => {
             )}
           </div>
 
-          {/* Quick AI Assistant Trigger Bubble */}
+          {/* Quick AI Assistant Trigger Card */}
           <div className="p-6 bg-slate-900 rounded-2xl text-white shadow-xl text-left relative overflow-hidden">
             <div className="absolute top-[-30%] right-[-30%] w-[60%] h-[60%] rounded-full bg-blue-500/20 blur-[50px]"></div>
             <div className="flex items-center gap-2 mb-4">
@@ -266,7 +321,7 @@ const StudentDashboard = () => {
               <h3 className="text-sm font-bold font-display">PlaceTrack AI Assistant</h3>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed mb-6">
-              Ask questions regarding matching drives, application statuses, interview advice, or technical preparation tips.
+              Ask short questions on eligible drives, interview prep, application statuses, or resume improvements.
             </p>
             <Button variant="primary" className="w-full bg-blue-500 hover:bg-blue-600 border-none" onClick={() => setShowChat(true)}>
               Launch Chatbot Assistant
@@ -279,36 +334,57 @@ const StudentDashboard = () => {
       {showChat && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-xs" onClick={() => setShowChat(false)}></div>
-          <div className="relative w-full max-w-md h-full bg-white shadow-2xl flex flex-col z-10 animate-page-enter">
+          <div className="relative w-full sm:w-[450px] max-w-full h-full bg-white shadow-2xl flex flex-col z-10 animate-page-enter">
             {/* Header */}
-            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
               <div className="flex items-center gap-2.5">
                 <Bot size={20} className="text-blue-400" />
                 <div>
-                  <p className="text-sm font-bold font-display">PlaceTrack AI Coordinator</p>
-                  <p className="text-[10px] text-slate-400">Authenticated Student Chat</p>
+                  <p className="text-sm font-bold font-display">PlaceTrack AI Assistant</p>
+                  <p className="text-[10px] text-slate-400">Concise & Smart Advisor</p>
                 </div>
               </div>
-              <button onClick={() => setShowChat(false)} className="text-slate-400 hover:text-white text-lg font-bold">×</button>
+              <button onClick={() => setShowChat(false)} className="text-slate-400 hover:text-white text-xl font-bold cursor-pointer">×</button>
+            </div>
+
+            {/* Quick Action Shortcut Pills */}
+            <div className="p-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2 overflow-x-auto shrink-0 scrollbar-none">
+              {[
+                { label: '⚡ Active Drives', query: 'What are my active placement drives?' },
+                { label: '📝 ATS Resume Tips', query: 'Give me 3 quick ATS resume tips' },
+                { label: '🎯 Mock Prep', query: 'Give me a mock interview question' },
+                { label: '📊 Application Status', query: 'What is my application status?' }
+              ].map((pill, idx) => (
+                <button
+                  key={idx}
+                  disabled={chatLoading}
+                  onClick={() => sendQuickPrompt(pill.query)}
+                  className="px-3 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 text-slate-600 rounded-full text-[10px] font-bold border border-slate-200 shrink-0 transition-colors cursor-pointer shadow-2xs"
+                >
+                  {pill.label}
+                </button>
+              ))}
             </div>
 
             {/* Chat message logs */}
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+            <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3">
               {chatMessages.length === 0 && (
-                <div className="my-auto text-center flex flex-col items-center gap-3">
-                  <div className="p-3 rounded-full bg-blue-50 text-blue-500">
+                <div className="my-auto text-center flex flex-col items-center gap-3 py-6">
+                  <div className="p-3 rounded-2xl bg-blue-50 text-blue-500">
                     <MessageSquare size={24} />
                   </div>
-                  <p className="text-xs font-bold text-slate-800 font-display">Hi, I am your PlaceTrack AI Coordinator!</p>
-                  <p className="text-[11px] text-slate-400 max-w-[220px]">Ask me: "Start Mock Practice", "Interview prep questions for my skills", or "Evaluate my resume against Microsoft job criteria"</p>
+                  <p className="text-xs font-bold text-slate-800 font-display">How can I assist you today?</p>
+                  <p className="text-[11px] text-slate-400 max-w-[240px] leading-relaxed">
+                    Click any shortcut pill above or type a query to get concise, instant answers.
+                  </p>
                 </div>
               )}
               {chatMessages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.sender === 'USER' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed break-words whitespace-pre-wrap ${
                     msg.sender === 'USER'
-                      ? 'bg-primary-500 text-white rounded-br-none'
-                      : 'bg-slate-100 text-slate-700 rounded-bl-none'
+                      ? 'bg-primary-500 text-white rounded-br-none shadow-xs'
+                      : 'bg-slate-100 text-slate-800 rounded-bl-none border border-slate-200/60'
                   }`}>
                     {msg.content}
                   </div>
@@ -316,7 +392,7 @@ const StudentDashboard = () => {
               ))}
               {chatLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-slate-100 text-slate-400 rounded-2xl rounded-bl-none px-4 py-3 text-xs flex gap-1 items-center">
+                  <div className="bg-slate-100 text-slate-400 rounded-2xl rounded-bl-none px-4 py-2.5 text-xs flex gap-1 items-center">
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"></span>
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.2s]"></span>
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.4s]"></span>
@@ -326,11 +402,11 @@ const StudentDashboard = () => {
             </div>
 
             {/* Chat form query */}
-            <form onSubmit={handleChatSubmit} className="p-4 border-t border-slate-100 flex gap-3">
+            <form onSubmit={handleChatSubmit} className="p-3 border-t border-slate-100 flex gap-2 shrink-0 bg-white">
               <input
                 type="text"
-                placeholder="Ask assistant something..."
-                className="flex-1 px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-primary-500"
+                placeholder="Type a quick message..."
+                className="flex-1 px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-primary-500"
                 value={chatQuery}
                 onChange={(e) => setChatQuery(e.target.value)}
                 disabled={chatLoading}
@@ -338,7 +414,7 @@ const StudentDashboard = () => {
               <button
                 type="submit"
                 disabled={chatLoading}
-                className="p-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl active:scale-95 transition-all shadow-md cursor-pointer"
+                className="p-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl active:scale-95 transition-all shadow-xs cursor-pointer disabled:opacity-50"
               >
                 <Send size={14} />
               </button>

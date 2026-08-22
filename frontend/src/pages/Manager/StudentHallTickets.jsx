@@ -153,17 +153,17 @@ const StudentHallTickets = () => {
       </div>
 
       {/* Applications list */}
-      <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse">
-            <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider">
+      <div className="bg-white border border-slate-100 rounded-2xl overflow-x-auto shadow-xs">
+        <div className="w-full">
+          <table className="w-full text-xs text-left align-middle">
+            <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 uppercase tracking-wider whitespace-nowrap">
               <tr>
-                <th className="px-6 py-4">Student ID / Name</th>
-                <th className="px-6 py-4">Department / CGPA</th>
-                <th className="px-6 py-4">Applied Job / Drive</th>
-                <th className="px-6 py-4">Application Status</th>
-                <th className="px-6 py-4">Ticket Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-4 whitespace-nowrap">Student ID / Name</th>
+                <th className="px-6 py-4 whitespace-nowrap">Department / CGPA</th>
+                <th className="px-6 py-4 whitespace-nowrap">Applied Job / Drive</th>
+                <th className="px-6 py-4 whitespace-nowrap">Application Status</th>
+                <th className="px-6 py-4 whitespace-nowrap">Ticket Status</th>
+                <th className="px-6 py-4 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">

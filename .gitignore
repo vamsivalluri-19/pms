@@ -33,3 +33,7 @@ logs/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Vite temporary files
+*.timestamp-*.mjs
+

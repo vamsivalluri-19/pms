@@ -19,7 +19,11 @@ import {
   deleteAcademicSetting,
   createStaffTicket,
   getStaffTickets,
-  getPublicStaffVerify
+  getPublicStaffVerify,
+  getSystemSettings,
+  updateSystemSettings,
+  clearSystemCache,
+  triggerSystemBackup
 } from '../controllers/systemController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -53,9 +57,16 @@ router.get('/academic-settings', protect, getAcademicSettings); // Publicly read
 router.post('/academic-settings', protect, authorizeRoles('ADMIN'), createAcademicSetting);
 router.delete('/academic-settings/:type/:id', protect, authorizeRoles('ADMIN'), deleteAcademicSetting);
 
+// Global System Settings (Admin Only)
+router.get('/system-settings', protect, getSystemSettings);
+router.put('/system-settings', protect, authorizeRoles('ADMIN'), updateSystemSettings);
+router.post('/system-settings/clear-cache', protect, authorizeRoles('ADMIN'), clearSystemCache);
+router.post('/system-settings/backup', protect, authorizeRoles('ADMIN'), triggerSystemBackup);
+
 // Staff Tickets
 router.get('/staff-tickets/public/verify/:id', getPublicStaffVerify);
 router.post('/staff-tickets', protect, authorizeRoles('PLACEMENT_MANAGER', 'ADMIN'), createStaffTicket);
 router.get('/staff-tickets', protect, authorizeRoles('PLACEMENT_MANAGER', 'ADMIN'), getStaffTickets);
 
 export default router;
+
