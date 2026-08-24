@@ -295,14 +295,13 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="flex flex-col gap-8 text-left animate-page-enter">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 font-display">System Administration</h2>
+          <h2 className="text-2xl font-bold text-slate-800 font-display whitespace-nowrap">System Administration</h2>
           <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Configure credentials, system metrics, and audit settings</p>
         </div>
         

@@ -102,7 +102,7 @@ const InterviewRoom = () => {
     const socketUrl = import.meta.env.VITE_SOCKET_URL || 
       (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : window.location.origin);
     socketRef.current = io(socketUrl, {
-      transports: ['websocket', 'polling']
+      transports: ['polling', 'websocket']
     });
 
     const socket = socketRef.current;

@@ -43,7 +43,7 @@ const Chat = () => {
   useEffect(() => {
     const socketUrl = import.meta.env.VITE_SOCKET_URL || 
       (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : window.location.origin);
-    const socket = io(socketUrl, { transports: ['websocket', 'polling'] });
+    const socket = io(socketUrl, { transports: ['polling', 'websocket'] });
     socketRef.current = socket;
 
     socket.on('connect', () => {

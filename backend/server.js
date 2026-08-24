@@ -36,7 +36,8 @@ initSocket(server);
 
 // Security Middlewares
 app.use(helmet({
-  crossOriginResourcePolicy: false // Allows files to be fetched from server on other origins
+  crossOriginResourcePolicy: false, // Allows files to be fetched from server on other origins
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }
 }));
 const isProduction = (process.env.NODE_ENV || 'development') === 'production';
 const defaultDevOrigins = 'http://localhost:5173,http://localhost:3050,http://localhost:3051';

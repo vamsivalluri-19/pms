@@ -34,11 +34,11 @@ import ManagerDashboard from '../pages/Manager/Dashboard.jsx';
 import ManagerStudents from '../pages/Manager/Students.jsx';
 import ManagerReports from '../pages/Manager/Reports.jsx';
 import StudentHallTickets from '../pages/Manager/StudentHallTickets.jsx';
-import StaffHallTickets from '../pages/Manager/StaffHallTickets.jsx';
 
 // Admin pages
 import AdminDashboard from '../pages/Admin/Dashboard.jsx';
 import Chat from '../pages/Shared/Chat.jsx';
+import Settings from '../pages/Shared/Settings.jsx';
 
 // Error pages
 import { NotFound, Unauthorized } from '../pages/Errors/ErrorPages.jsx';
@@ -69,7 +69,7 @@ const AppRoutes = () => {
           <Route path="/student/interviews" element={<StudentApplications />} />
           <Route path="/student/results" element={<StudentApplications />} />
           <Route path="/student/placements" element={<StudentApplications />} />
-          <Route path="/student/settings" element={<StudentProfile />} />
+          <Route path="/student/settings" element={<Settings />} />
           <Route path="/student/chat" element={<Chat />} />
           <Route path="/student/hall-tickets" element={<StudentHallTicketsView />} />
         </Route>
@@ -85,7 +85,7 @@ const AppRoutes = () => {
           <Route path="/company/applications" element={<CompanyApplicants />} />
           <Route path="/company/interviews" element={<CompanyApplicants />} />
           <Route path="/company/results" element={<CompanyApplicants />} />
-          <Route path="/company/settings" element={<CompanyProfile />} />
+          <Route path="/company/settings" element={<Settings />} />
         </Route>
       </Route>
 
@@ -102,8 +102,7 @@ const AppRoutes = () => {
           <Route path="/manager/placements" element={<ManagerReports />} />
           <Route path="/manager/reports" element={<ManagerReports />} />
           <Route path="/manager/student-halltickets" element={<StudentHallTickets />} />
-          <Route path="/manager/staff-halltickets" element={<StaffHallTickets />} />
-          <Route path="/manager/settings" element={<ManagerDashboard />} />
+          <Route path="/manager/settings" element={<Settings />} />
           <Route path="/manager/chat" element={<Chat />} />
         </Route>
       </Route>
@@ -121,7 +120,7 @@ const AppRoutes = () => {
           <Route path="/admin/drives" element={<AdminDashboard />} />
           <Route path="/admin/reports" element={<AdminDashboard />} />
           <Route path="/admin/audit-logs" element={<AdminDashboard />} />
-          <Route path="/admin/settings" element={<AdminDashboard />} />
+          <Route path="/admin/settings" element={<Settings />} />
           <Route path="/admin/chat" element={<Chat />} />
         </Route>
       </Route>

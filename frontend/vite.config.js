@@ -9,6 +9,9 @@ export default defineConfig({
   ],
   server: {
     port: 3050,
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:5050',

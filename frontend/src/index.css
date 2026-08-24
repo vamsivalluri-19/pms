@@ -100,20 +100,38 @@ body {
 .app-shell main > div {
   min-width: 0;
   max-width: 100%;
+  overflow-x: hidden;
 }
 
 .app-shell main {
-  overflow-x: hidden;
+  overflow-x: hidden !important;
 }
 
 .app-shell table {
   width: 100%;
   max-width: 100%;
+  table-layout: auto;
 }
 
 .app-shell th,
 .app-shell td {
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+}
+
+/* Enforce layout boundaries and wrap long strings */
+.app-shell p, 
+.app-shell span, 
+.app-shell h1, 
+.app-shell h2, 
+.app-shell h3, 
+.app-shell h4, 
+.app-shell h5, 
+.app-shell h6, 
+.app-shell div, 
+.app-shell a {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  min-width: 0;
 }
 
 /* Shared product surface: used by dashboards, profiles and management screens. */
@@ -143,7 +161,7 @@ body {
 .app-shell main .bg-white.rounded-2xl:hover { border-color: color-mix(in srgb, var(--workspace) 24%, #e2e8f0); }
 .app-shell main .bg-white.rounded-2xl > h2:first-child,
 .app-shell main .bg-white.rounded-2xl > h3:first-child { letter-spacing: -.02em; }
-.role-glow { position: relative; isolation: isolate; }
+.role-glow { position: relative; isolation: isolate; overflow: hidden; }
 .role-glow::before { content: ''; position: absolute; width: 19rem; height: 19rem; top: -11rem; right: -7rem; background: var(--workspace-soft); filter: blur(20px); border-radius: 999px; z-index: -1; pointer-events: none; }
 .public-shell { background: radial-gradient(circle at 84% 4%, rgba(37, 99, 235, .13), transparent 27rem), radial-gradient(circle at 6% 37%, rgba(124, 58, 237, .08), transparent 23rem), #f7f9fc; }
 .public-shell section { position: relative; }
@@ -241,6 +259,34 @@ html:not(.dark) .auth-shell textarea::placeholder {
   .workspace-hero-page {
     padding: 0.42rem 0.65rem;
     font-size: 9px;
+  }
+
+  /* Shrink table sizing for mobile viewports */
+  .app-shell table {
+    font-size: 11px !important;
+  }
+  .app-shell th, 
+  .app-shell td {
+    padding: 8px 10px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    font-size: 13px;
+  }
+  .app-shell table {
+    font-size: 10px !important;
+  }
+  .app-shell th, 
+  .app-shell td {
+    padding: 6px 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    font-size: 12px;
   }
 }
 

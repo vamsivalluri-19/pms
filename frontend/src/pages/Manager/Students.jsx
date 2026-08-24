@@ -101,7 +101,7 @@ const ManagerStudents = () => {
     return matchesSearch && matchesDept;
   });
 
-  if (loading) return <LoadingSpinner />;
+
 
   const filteredApps = applications.filter((app) => {
     const studentName = app.student?.name || '';
@@ -119,7 +119,7 @@ const ManagerStudents = () => {
     return matchesSearch && matchesDept;
   });
 
-  if (loading) return <LoadingSpinner />;
+
 
   return (
     <div className="flex flex-col gap-8 text-left animate-page-enter">

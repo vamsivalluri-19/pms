@@ -99,7 +99,7 @@ const StudentDashboard = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
+
 
   // Helper for quick assistant prompt shortcuts
   const sendQuickPrompt = async (promptText) => {

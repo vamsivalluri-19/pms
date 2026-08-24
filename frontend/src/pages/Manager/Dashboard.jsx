@@ -52,6 +52,7 @@ const ManagerDashboard = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentSearch, setStudentSearch] = useState('');
   const [recentPlacements, setRecentPlacements] = useState([]);
+  const [interviews, setInterviews] = useState([]);
 
   // Mockup Trend Data matching high-fidelity mockup
   const successRateTrend = [
@@ -103,6 +104,16 @@ const ManagerDashboard = () => {
       const placementsRes = await api.get('/placements');
       if (placementsRes.data.success) {
         setRecentPlacements(placementsRes.data.placements);
+      }
+
+      // Fetch scheduled interviews
+      try {
+        const interviewsRes = await api.get('/interviews');
+        if (interviewsRes.data.success) {
+          setInterviews(interviewsRes.data.interviews || []);
+        }
+      } catch (iErr) {
+        console.error('Error fetching interviews:', iErr);
       }
     } catch (error) {
       console.error(error);
@@ -165,14 +176,12 @@ const ManagerDashboard = () => {
     s.department?.toLowerCase().includes(studentSearch.toLowerCase())
   );
 
-  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="flex flex-col gap-8 text-left animate-page-enter">
-      {/* Header toolbar matching mockup branding */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 font-display">Dashboard Overview</h2>
+          <h2 className="text-xl font-bold text-slate-800 font-display whitespace-nowrap">Dashboard Overview</h2>
           <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Institution-level placements verification panel</p>
         </div>
         
@@ -646,19 +655,35 @@ const ManagerDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {[
-                  { student: 'Emily Chen (CSE)', company: 'Microsoft', interviewer: 'Satya Nadela', mode: 'Online (Zoom)', date: 'Oct 28, 2026 - 10:00 AM' },
-                  { student: 'Mark Lee (IT)', company: 'Google', interviewer: 'Sundar Pichai', mode: 'Online (Teams)', date: 'Nov 02, 2026 - 02:00 PM' },
-                  { student: 'Priya Sharma (ECE)', company: 'Accenture', interviewer: 'Julie Sweet', mode: 'Online (Zoom)', date: 'Nov 05, 2026 - 11:30 AM' }
-                ].map((inv, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/50">
-                    <td className="px-6 py-3.5 font-bold text-slate-800">{inv.student}</td>
-                    <td className="px-6 py-3.5 text-slate-500">{inv.company}</td>
-                    <td className="px-6 py-3.5 font-semibold text-slate-700">{inv.interviewer}</td>
-                    <td className="px-6 py-3.5 text-blue-600 font-semibold">{inv.mode}</td>
-                    <td className="px-6 py-3.5 text-right font-bold text-slate-700">{inv.date}</td>
+                {interviews.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-8 text-center text-slate-400">
+                      No interviews scheduled yet.
+                    </td>
                   </tr>
-                ))}
+                ) : (
+                  interviews.map((inv, idx) => (
+                    <tr key={inv._id || idx} className="hover:bg-slate-50/50">
+                      <td className="px-6 py-3.5 font-bold text-slate-800">
+                        {inv.student?.name} {inv.student?.department && `(${inv.student.department})`}
+                      </td>
+                      <td className="px-6 py-3.5 text-slate-500">{inv.company?.name || 'Recruiter'}</td>
+                      <td className="px-6 py-3.5 font-semibold text-slate-700">{inv.interviewer || 'N/A'}</td>
+                      <td className="px-6 py-3.5 text-blue-600 font-semibold">
+                        {inv.meetingLink ? (
+                          <a href={inv.meetingLink} target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:underline">
+                            {inv.mode || 'Online'}
+                          </a>
+                        ) : (
+                          inv.mode || 'Online'
+                        )}
+                      </td>
+                      <td className="px-6 py-3.5 text-right font-bold text-slate-700">
+                        {inv.date ? new Date(inv.date).toLocaleDateString() : 'N/A'} at {inv.time || 'N/A'}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

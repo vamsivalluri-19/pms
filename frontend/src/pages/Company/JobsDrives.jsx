@@ -170,7 +170,7 @@ const CompanyJobsDrives = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
+
 
   return (
     <div className="flex flex-col gap-8 text-left animate-page-enter">

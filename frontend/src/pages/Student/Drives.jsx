@@ -96,7 +96,7 @@ const StudentDrives = () => {
     d.job?.title?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) return <LoadingSpinner />;
+
 
   return (
     <div className="flex flex-col gap-8 text-left">
