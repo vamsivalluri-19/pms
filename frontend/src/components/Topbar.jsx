@@ -1,15 +1,17 @@
 import React, { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { NotificationContext } from '../context/NotificationContext.jsx';
-import { Bell, Menu, User, Check, Trash2, Calendar, Award, Sun, Moon, Settings } from 'lucide-react';
+import { Bell, Menu, User, Check, Trash2, Calendar, Award, Sun, Moon, Settings, Bot, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getUploadUrl } from '../services/api.js';
+import AiAssistantDrawer from './AiAssistantDrawer.jsx';
 
 const Topbar = ({ toggleSidebar }) => {
   const { user, profile, theme, toggleTheme } = useContext(AuthContext);
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useContext(NotificationContext);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showAiDrawer, setShowAiDrawer] = useState(false);
   const workspaceName = { STUDENT: 'Career workspace', COMPANY: 'Recruiter studio', PLACEMENT_MANAGER: 'Operations desk', ADMIN: 'System control centre' }[user?.role] || 'Campus Placement Portal';
 
   const getInitials = (name) => {
@@ -34,7 +36,17 @@ const Topbar = ({ toggleSidebar }) => {
       </div>
 
       {/* Control Nodes */}
-      <div className="flex items-center gap-4 relative">
+      <div className="flex items-center gap-3 sm:gap-4 relative">
+        {/* PlaceTrack AI Assistant Button */}
+        <button
+          onClick={() => setShowAiDrawer(true)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
+          title="Launch PlaceTrack Gemini AI Assistant"
+        >
+          <Bot size={16} />
+          <span className="hidden md:inline font-display">PlaceTrack AI</span>
+          <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+        </button>
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
@@ -169,6 +181,9 @@ const Topbar = ({ toggleSidebar }) => {
           )}
         </div>
       </div>
+
+      {/* Global PlaceTrack Gemini AI Assistant Drawer */}
+      <AiAssistantDrawer isOpen={showAiDrawer} onClose={() => setShowAiDrawer(false)} />
     </header>
   );
 };

@@ -104,7 +104,7 @@ const VerifyTicket = () => {
             <div>
               <span className="text-[10px] text-slate-500 font-semibold block">University Email</span>
               <span className="font-bold text-slate-200 flex items-center gap-1 mt-0.5 break-all">
-                <Mail size={12} className="text-slate-500 shrink-0" /> {student?.user?.email}
+                <Mail size={12} className="text-slate-500 shrink-0" /> {student?.user?.email || student?.email || 'N/A'}
               </span>
             </div>
             <div>

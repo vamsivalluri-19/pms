@@ -99,7 +99,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   };
 
   const activeStyle = `flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold transition-all duration-200 shadow-sm ${roleMeta.active}`;
-  const inactiveStyle = 'flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-700 hover:translate-x-0.5 font-medium transition-all duration-200';
+  const inactiveStyle = 'flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary-600 dark:hover:text-blue-400 font-semibold transition-all duration-200';
 
   return (
     <>
@@ -113,19 +113,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
       {/* Sidebar scaffolding */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-white/95 backdrop-blur-xl border-r border-slate-200/70 shadow-[10px_0_35px_rgba(15,23,42,.04)] transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/70 dark:border-slate-800 shadow-[10px_0_35px_rgba(15,23,42,.04)] transition-transform duration-300 lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Header Branding */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
             <div className={`p-2 rounded-xl bg-gradient-to-tr ${roleMeta.accent} text-white shadow-md shadow-slate-900/10`}>
               <GraduationCap size={20} />
             </div>
             <div>
-              <span className="text-sm font-extrabold text-slate-800 font-display tracking-tight leading-none block">CAMPUS PLACEMENT</span>
-              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mt-0.5">{roleMeta.label}</span>
+              <span className="text-sm font-extrabold text-slate-900 dark:text-white font-display tracking-tight leading-none block">CAMPUS PLACEMENT</span>
+              <span className="text-[9px] text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider block mt-0.5">{roleMeta.label}</span>
             </div>
           </div>
           <button onClick={toggleSidebar} className="text-slate-400 hover:text-slate-600 lg:hidden">

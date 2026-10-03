@@ -165,7 +165,7 @@ const StudentHallTickets = () => {
               <div className="grid grid-cols-2 gap-4 text-[11px]">
                 <div>
                   <span className="text-[9px] text-slate-400 uppercase font-semibold block">University Email</span>
-                  <span className="font-bold text-slate-700 break-all">{profile?.user?.email || 'N/A'}</span>
+                  <span className="font-bold text-slate-700 break-all">{profile?.user?.email || profile?.email || 'N/A'}</span>
                 </div>
                 <div>
                   <span className="text-[9px] text-slate-400 uppercase font-semibold block">Contact Number</span>
@@ -209,18 +209,34 @@ const StudentHallTickets = () => {
               <Button
                 variant="primary"
                 onClick={() => {
-                  const printContents = document.getElementById('printable-hallticket').innerHTML;
-                  const originalContents = document.body.innerHTML;
-
-                  document.body.innerHTML = `
-                    <div style="padding: 40px; font-family: sans-serif; color: #1e293b; max-width: 450px; margin: 0 auto;">
-                      ${printContents}
-                    </div>
-                  `;
-                  window.print();
-
-                  document.body.innerHTML = originalContents;
-                  window.location.reload();
+                  const printElement = document.getElementById('printable-hallticket');
+                  if (!printElement) return;
+                  const printWindow = window.open('', '_blank', 'width=800,height=900');
+                  if (printWindow) {
+                    printWindow.document.write(`
+                      <!DOCTYPE html>
+                      <html>
+                        <head>
+                          <title>Candidate Hall Ticket - ${profile?.name || 'Pass'}</title>
+                          <script src="https://cdn.tailwindcss.com"></script>
+                        </head>
+                        <body class="bg-white p-8">
+                          <div class="max-w-md mx-auto">
+                            ${printElement.outerHTML}
+                          </div>
+                          <script>
+                            setTimeout(() => {
+                              window.print();
+                              window.close();
+                            }, 500);
+                          </script>
+                        </body>
+                      </html>
+                    `);
+                    printWindow.document.close();
+                  } else {
+                    window.print();
+                  }
                 }}
                 className="flex-1 gap-2"
               >

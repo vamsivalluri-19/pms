@@ -22,18 +22,18 @@ const StatCard = ({ title, value, icon, description, trend, variant = 'blue' }) 
   return (
     <div className={`premium-card p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 flex items-center justify-between ${borderVariants[variant]}`}>
       <div className="flex-1">
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider font-display">{title}</p>
-        <p className="mt-2 text-2xl font-bold text-slate-800 font-display tracking-tight">{value}</p>
+        <p className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider font-display">{title}</p>
+        <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white font-display tracking-tight">{value}</p>
         {(description || trend) && (
           <div className="mt-1.5 flex items-center gap-1.5">
             {trend && (
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm ${
-                trend.startsWith('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                trend.startsWith('+') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
               }`}>
                 {trend}
               </span>
             )}
-            {description && <span className="text-[11px] text-slate-500">{description}</span>}
+            {description && <span className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">{description}</span>}
           </div>
         )}
       </div>
